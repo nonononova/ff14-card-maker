@@ -13,7 +13,7 @@ export default function App() {
   const [twitterId, setTwitterId] = useState('Cheese_Dohee');
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
 
-  // DC & 種族の選択肢
+  // ⭐ DC & 種族の選択肢 (プルダウン用)
   const dcOptions = ['Mana', 'Elemental', 'Gaia', 'Meteor', 'Aether', 'Primal', 'Crystal', 'Dynamis', 'Light', 'Chaos', 'Materia'];
   const raceOptions = ["Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'];
 
@@ -30,7 +30,7 @@ export default function App() {
   ];
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
-  // カラーテーマ (全24種)
+  // ⭐ カラーテーマ (全24種へ大幅追加)
   const cardThemes = {
     sakura: { name: 'サクラ', bg: '#fff5f7', wrapperBg: '#e5e5e5', text: '#881337', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 15px 40px rgba(136, 19, 55, 0.1)' },
     yozakura: { name: '夜桜', bg: '#1c0d18', wrapperBg: '#2a1224', text: '#f472b6', sub: '#f43f5e', bio: '#fbcfe8', border: '#831843', badgeBg: '#831843', badgeText: '#f472b6', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(244, 114, 182, 0.3)' },
@@ -44,6 +44,7 @@ export default function App() {
     violet: { name: 'ヴァイオレット', bg: '#1e1b4b', wrapperBg: '#312e81', text: '#c084fc', sub: '#a855f7', bio: '#e9d5ff', border: '#4338ca', badgeBg: '#4338ca', badgeText: '#e9d5ff', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(192, 132, 252, 0.3)' },
     frost: { name: 'フロスト', bg: '#082f49', wrapperBg: '#075985', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: '#0369a1', badgeBg: '#0369a1', badgeText: '#bae6fd', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.35)' },
     ocean: { name: 'オーシャン', bg: '#f0f9ff', wrapperBg: '#e0f2fe', text: '#0284c7', sub: '#38bdf8', bio: '#0c4a6e', border: '#bae6fd', badgeBg: '#bae6fd', badgeText: '#0369a1', shadow: '0 15px 40px rgba(2, 132, 199, 0.1)' },
+    ocean_dark: { name: '深海', bg: '#0c4a6e', wrapperBg: '#0369a1', text: '#e0f2fe', sub: '#7dd3fc', bio: '#f0f9ff', border: '#075985', badgeBg: '#075985', badgeText: '#e0f2fe', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(56, 189, 248, 0.25)' },
     cyber: { name: 'サイバー', bg: '#030712', wrapperBg: '#0f172a', text: '#22d3ee', sub: '#64748b', bio: '#94a3b8', border: '#1f2937', badgeBg: '#1f2937', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(34, 211, 238, 0.35)' },
     neon: { name: 'ネオン', bg: '#09090b', wrapperBg: '#18181b', text: '#a855f7', sub: '#ec4899', bio: '#f472b6', border: '#27272a', badgeBg: '#3f3f46', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(168, 85, 247, 0.4)' },
     blood: { name: 'ブラッド', bg: '#180202', wrapperBg: '#270303', text: '#f43f5e', sub: '#9f1239', bio: '#fecdd3', border: '#4c0519', badgeBg: '#4c0519', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 63, 94, 0.35)' },
@@ -52,6 +53,8 @@ export default function App() {
     gold: { name: 'ゴールド', bg: '#fefce8', wrapperBg: '#fef08a', text: '#713f12', sub: '#ca8a04', bio: '#422006', border: '#fde047', badgeBg: '#fde047', badgeText: '#854d0e', shadow: '0 15px 40px rgba(113, 63, 18, 0.15)' },
     white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.08)' },
     monochrome: { name: 'モノクロ', bg: '#000000', wrapperBg: '#171717', text: '#ffffff', sub: '#a3a3a3', bio: '#d4d4d4', border: '#262626', badgeBg: '#262626', badgeText: '#ffffff', shadow: '0 25px 60px rgba(0, 0, 0, 0.9)' },
+    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)' },
+    astral: { name: 'アストラル', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#1e293b', badgeBg: '#1e293b', badgeText: '#38bdf8', shadow: '0 25px 60px rgba(0, 0, 0, 0.7)' },
     forest: { name: 'フォレスト', bg: '#f4fbf7', wrapperBg: '#d1fae5', text: '#065f46', sub: '#059669', bio: '#022c22', border: '#a7f3d0', badgeBg: '#a7f3d0', badgeText: '#047857', shadow: '0 15px 40px rgba(6, 95, 70, 0.1)' },
     rose: { name: 'ロゼ', bg: '#fff1f2', wrapperBg: '#ffe4e6', text: '#9f1239', sub: '#e11d48', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#be123c', shadow: '0 15px 40px rgba(159, 18, 57, 0.1)' }
   };
@@ -72,6 +75,7 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState(null);
 
+  // ⭐ スマホ閲覧時のSticky固定用CSS & レスポンシブCSS
   useEffect(() => {
     const linkId = 'google-fonts-css';
     if (!document.getElementById(linkId)) {
@@ -87,20 +91,34 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+        /* ⭐ PCでは2カラム、スマホでは1カラム縦並び */
+        .app-container { 
+          display: grid; 
+          grid-template-columns: minmax(0, 1fr) 380px; 
+          gap: 24px; 
+          align-items: start; 
+        }
         @media (max-width: 1024px) { 
           .app-container { display: flex; flex-direction: column; } 
-          .preview-area { position: sticky; top: 54px; z-index: 80; padding-bottom: 12px; }
+          /* ⭐ スマホ閲覧時にプレビューを上部にSticky固定 */
+          .preview-area {
+            position: sticky;
+            top: 54px;
+            z-index: 80;
+            padding-bottom: 12px;
+          }
         }
       `;
       document.head.appendChild(style);
     }
   }, []);
 
+  // ⭐ 画面幅に合わせた縮小(scale)計算
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
         const parentWidth = containerRef.current.offsetWidth;
+        // ⭐ PC大画面時は幅いっぱいに拡大表示
         const newScale = Math.min(parentWidth / 1200, 1);
         setScale(newScale);
       }
@@ -111,13 +129,14 @@ export default function App() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
+  // 画像圧縮処理 (CORS対策 & 軽量化)
   const compressImage = useCallback((file, maxWidth = 1000) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
-        img.crossOrigin = "Anonymous"; // CORS対策
+        img.crossOrigin = "Anonymous"; // ⭐ CORS対策
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -179,7 +198,7 @@ export default function App() {
     window.scrollTo(0, 0);
 
     try {
-      // html2canvas のオプション設定
+      // ⭐ html2canvas のオプション設定
       const options = {
         scale: 2, // 高画質化 (1.5〜2.0が推奨)
         useCORS: true, // CORS対応画像を読み込む
@@ -234,8 +253,6 @@ export default function App() {
     accent: '#6366f1',
   };
 
-  const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.sakura;
-
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
@@ -273,7 +290,7 @@ export default function App() {
       {/* メインエリア */}
       <div className="app-container" style={{ maxWidth: '1800px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
-        {/* 左側: プレビュー */}
+        {/* 左側: プレビュー（スマホではSticky固定） */}
         <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
           
           <button
@@ -326,6 +343,7 @@ export default function App() {
 
                     <div style={{ flex: 1, paddingTop: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        {/* ⭐ 名前にもフォンフォントスタイルをダイレクト適用 */}
                         <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px', fontFamily: cardFont }}>{name}</h2>
                         <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
                         <span style={{
@@ -335,6 +353,7 @@ export default function App() {
                           {dc} | {race}
                         </span>
                       </div>
+                      {/* ⭐ ひとことは完全左詰め（textAlign: left） */}
                       <p style={{ margin: '14px 0 0 0', fontSize: '22px', lineHeight: '1.5', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500', textAlign: 'left', fontFamily: cardFont }}>
                         {bio}
                       </p>
@@ -416,6 +435,7 @@ export default function App() {
                   <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
                 </div>
 
+                {/* ⭐ DC・種族 (崩れ防止版プルダウン) */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div style={{ minWidth: 0 }}>
                     <label style={labelStyle(colors)}>データセンター (DC)</label>
@@ -524,6 +544,7 @@ export default function App() {
   );
 }
 
+// 部品コンポーネント
 function TabButton({ active, onClick, children, colors }) {
   return (
     <button
