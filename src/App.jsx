@@ -25,7 +25,7 @@ export default function App() {
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
   // カードテーマ
-  const [cardThemeKey, setCardThemeKey] = useState('cyber');
+  const [cardThemeKey, setCardThemeKey] = useState('sakura'); // 初期値をサクラに設定
 
   // アイコン画像 ＆ ギャラリー画像
   const [avatar, setAvatar] = useState({ src: null, x: 50, y: 50, zoom: 1 });
@@ -36,15 +36,14 @@ export default function App() {
   ]);
 
   const cardRef = useRef(null);
-  const wrapperRef = useRef(null);
+  const containerRef = useRef(null);
   
   // プレビューの縮小率（スマホ画面に収める用）
   const [scale, setScale] = useState(1);
-  // 画像生成の状態管理
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState(null);
 
-  // Webフォント読み込み
+  // Webフォント＆PC/スマホ切り替え用CSSの読み込み
   useEffect(() => {
     const linkId = 'google-fonts-css';
     if (!document.getElementById(linkId)) {
@@ -54,24 +53,35 @@ export default function App() {
       link.rel = 'stylesheet';
       document.head.appendChild(link);
     }
+
+    const styleId = 'responsive-layout-css';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .app-container { display: grid; grid-template-columns: 400px 1fr; gap: 24px; align-items: start; }
+        @media (max-width: 1024px) { .app-container { display: flex; flex-direction: column-reverse; } }
+      `;
+      document.head.appendChild(style);
+    }
   }, []);
 
-  // 画面幅に合わせて1200pxのカードを縮小表示する計算
+  // 画面幅に合わせて1200pxのカードを縮小表示し、かつ「謎の空白」を消すための高さ計算
   useEffect(() => {
     const updateScale = () => {
-      if (wrapperRef.current) {
-        const parentWidth = wrapperRef.current.offsetWidth;
-        // 最大1200px。画面がそれより小さければ縮小する
+      if (containerRef.current) {
+        const parentWidth = containerRef.current.offsetWidth;
         const newScale = Math.min(parentWidth / 1200, 1);
         setScale(newScale);
       }
     };
     window.addEventListener('resize', updateScale);
     updateScale(); // 初回実行
+    // パネルの開閉などで幅が変わった時のために少し遅延しても実行
+    setTimeout(updateScale, 100);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // 画像圧縮処理（スマホのメモリ不足対策で最大幅を少し小さめに）
   const compressImage = (file, maxWidth = 1000) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -117,25 +127,20 @@ export default function App() {
     }
   };
 
-  // 画像生成処理（スマホでも確実な長押し保存用モーダルを表示）
   const handleGenerate = async () => {
     if (!cardRef.current) return;
     setIsGenerating(true);
     try {
-      // 1200x800の固定サイズで高画質にキャプチャ
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 1.5, // Xで綺麗に見える1.5倍解像度 (1800x1200)
+        pixelRatio: 1.5,
         skipFonts: false,
-        style: {
-          transform: 'scale(1)', // キャプチャ時は縮小を解除
-          transformOrigin: 'top left'
-        }
+        style: { transform: 'scale(1)', transformOrigin: 'top left' }
       });
       setResultImage(dataUrl);
     } catch (err) {
       console.error(err);
-      alert('画像の生成に失敗しました。時間をおいて再度お試しください。');
+      alert('画像の生成に失敗しました。');
     } finally {
       setIsGenerating(false);
     }
@@ -152,20 +157,31 @@ export default function App() {
     accent: '#10b981',
   };
 
+  // 16種類のテーマを完全復活
   const cardThemes = {
     cyber: { name: 'サイバー', bg: '#030712', wrapperBg: '#0f172a', text: '#22d3ee', sub: '#64748b', bio: '#94a3b8', border: '#1f2937', badgeBg: '#1f2937', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(34, 211, 238, 0.35)' },
     blood: { name: 'ブラッド', bg: '#180202', wrapperBg: '#270303', text: '#f43f5e', sub: '#9f1239', bio: '#fecdd3', border: '#4c0519', badgeBg: '#4c0519', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 63, 94, 0.35)' },
     royal: { name: 'ロイヤル', bg: '#0f0728', wrapperBg: '#1e1b4b', text: '#eab308', sub: '#a855f7', bio: '#fef08a', border: '#2e1065', badgeBg: '#2e1065', badgeText: '#fde047', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(234, 179, 8, 0.35)' },
-    sakura: { name: 'サクラ', bg: '#fff5f7', wrapperBg: '#ffe4e6', text: '#881337', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 25px 50px rgba(136, 19, 55, 0.25), 0 0 30px rgba(190, 18, 60, 0.2)' },
-    white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 25px 50px rgba(15, 23, 42, 0.25), 0 0 30px rgba(100, 116, 139, 0.15)' },
-    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 0, 0, 0.5)' }
+    frost: { name: 'フロスト', bg: '#082f49', wrapperBg: '#075985', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: '#0369a1', badgeBg: '#0369a1', badgeText: '#bae6fd', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.35)' },
+    midnight: { name: '黒金', bg: '#09090b', wrapperBg: '#18181b', text: '#facc15', sub: '#a1a1aa', bio: '#e4e4e7', border: '#27272a', badgeBg: '#27272a', badgeText: '#facc15', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(250, 204, 21, 0.3)' },
+    astral: { name: 'アストラル', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#1e293b', badgeBg: '#1e293b', badgeText: '#38bdf8', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.3)' },
+    sakura: { name: 'サクラ', bg: '#fff5f7', wrapperBg: '#e5e5e5', text: '#881337', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 15px 40px rgba(136, 19, 55, 0.1)' },
+    strawberry: { name: 'いちご', bg: '#ffffff', wrapperBg: '#fff1f2', text: '#e11d48', sub: '#fb7185', bio: '#881337', border: '#ffe4e6', badgeBg: '#ffe4e6', badgeText: '#e11d48', shadow: '0 15px 40px rgba(225, 29, 72, 0.1)' },
+    chocolat: { name: 'ショコラ', bg: '#fdfbf7', wrapperBg: '#fef3c7', text: '#451a03', sub: '#78350f', bio: '#292524', border: '#fde68a', badgeBg: '#fde68a', badgeText: '#78350f', shadow: '0 15px 40px rgba(69, 26, 3, 0.1)' },
+    rose: { name: 'ロゼ', bg: '#fff1f2', wrapperBg: '#ffe4e6', text: '#9f1239', sub: '#e11d48', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#be123c', shadow: '0 15px 40px rgba(159, 18, 57, 0.1)' },
+    mint: { name: 'ミント', bg: '#f0fdf4', wrapperBg: '#dcfce7', text: '#047857', sub: '#34d399', bio: '#064e3b', border: '#bbf7d0', badgeBg: '#bbf7d0', badgeText: '#047857', shadow: '0 15px 40px rgba(4, 120, 87, 0.1)' },
+    lavender: { name: 'ラベンダー', bg: '#faf5ff', wrapperBg: '#f3e8ff', text: '#6b21a8', sub: '#c084fc', bio: '#3b0764', border: '#e9d5ff', badgeBg: '#e9d5ff', badgeText: '#6b21a8', shadow: '0 15px 40px rgba(107, 33, 168, 0.1)' },
+    forest: { name: 'フォレスト', bg: '#f4fbf7', wrapperBg: '#d1fae5', text: '#065f46', sub: '#059669', bio: '#022c22', border: '#a7f3d0', badgeBg: '#a7f3d0', badgeText: '#047857', shadow: '0 15px 40px rgba(6, 95, 70, 0.1)' },
+    white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.08)' },
+    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 0, 0, 0.5)' },
+    gold: { name: 'ゴールド', bg: '#fefce8', wrapperBg: '#fef08a', text: '#713f12', sub: '#ca8a04', bio: '#422006', border: '#fde047', badgeBg: '#fde047', badgeText: '#854d0e', shadow: '0 15px 40px rgba(113, 63, 18, 0.15)' }
   };
-  const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.cyber;
+  const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.sakura;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
-      {/* 保存用モーダル（スマホ長押し対応） */}
+      {/* 保存用モーダル */}
       {resultImage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -196,12 +212,11 @@ export default function App() {
         </button>
       </header>
 
-      {/* メインエリア */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '24px', flexDirection: 'column-reverse' }}>
+      {/* メインエリア（PCは2カラム、スマホは縦並び） */}
+      <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 16px' }}>
         
-        {/* 操作パネル */}
-        <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
+        {/* 左側: 操作パネル */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <SectionCard title="👤 プロフィール" colors={colors}>
             <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="キャラクター名" />
             <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="X (Twitter) ID" />
@@ -214,11 +229,11 @@ export default function App() {
               {fontOptions.map((f) => <option key={f.label} value={f.value}>{f.label}</option>)}
             </select>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '12px' }}>
               {Object.keys(cardThemes).map((key) => (
                 <button key={key} onClick={() => setCardThemeKey(key)} style={{
-                  padding: '8px', borderRadius: '6px', border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                  backgroundColor: cardThemes[key].bg, color: cardThemes[key].text, fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
+                  padding: '8px 4px', borderRadius: '6px', border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                  backgroundColor: cardThemes[key].bg, color: cardThemes[key].text, fontSize: '10px', fontWeight: 'bold', cursor: 'pointer'
                 }}>
                   {cardThemes[key].name}
                 </button>
@@ -253,8 +268,8 @@ export default function App() {
           </SectionCard>
         </div>
 
-        {/* プレビュー ＆ 保存エリア */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        {/* 右側: プレビュー ＆ 保存エリア */}
+        <div style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
@@ -269,32 +284,34 @@ export default function App() {
           </button>
 
           {/* 
-            【超重要】
-            親コンテナ(wrapperRef)の幅に合わせて、固定サイズ(1200x800)のカードをscaleで縮小表示する。
-            これにより、スマホでも崩れず、生成時も絶対に1200x800が維持される！
+            【スマホ空白回避策】 
+            scale計算に合わせて親コンテナの高さを動的に変化させることで、下部の巨大な空白を消滅させます
           */}
-          <div ref={wrapperRef} style={{ width: '100%', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+          <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
             <div style={{
-              width: '1200px', height: '800px', // ここでX向けの最強サイズ (3:2) を完全固定！
+              width: '1200px', height: '800px',
               transform: `scale(${scale})`, 
               transformOrigin: 'top center',
-              transition: 'transform 0.1s ease',
             }}>
               
-              {/* === ここから下が出力される画像本体 === */}
-              <div ref={cardRef} style={{ width: '1200px', height: '800px', backgroundColor: activeCardTheme.wrapperBg, padding: '32px', boxSizing: 'border-box' }}>
+              {/* === ここから下が出力される画像本体 (Kanon_ss_gallery_card_2 完全再現) === */}
+              <div ref={cardRef} style={{
+                width: '1200px', height: '800px', backgroundColor: activeCardTheme.wrapperBg,
+                padding: '40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column'
+              }}>
                 <div style={{
-                  width: '100%', height: '100%', backgroundColor: activeCardTheme.bg, borderRadius: '24px',
-                  padding: '40px', boxSizing: 'border-box', fontFamily: cardFont, boxShadow: activeCardTheme.shadow,
-                  display: 'flex', flexDirection: 'column', gap: '32px'
+                  flex: 1, backgroundColor: activeCardTheme.bg, borderRadius: '40px',
+                  padding: '40px 48px', boxSizing: 'border-box', fontFamily: cardFont,
+                  boxShadow: activeCardTheme.shadow, display: 'flex', flexDirection: 'column'
                 }}>
                   
-                  {/* 上部：プロフィールエリア */}
-                  <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                  {/* ヘッダーエリア */}
+                  <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start' }}>
                     {/* アバター */}
                     <div style={{
-                      width: '180px', height: '180px', borderRadius: '50%', border: `6px solid ${activeCardTheme.bg}`,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)', backgroundColor: activeCardTheme.border, overflow: 'hidden', flexShrink: 0
+                      width: '160px', height: '160px', borderRadius: '50%',
+                      border: `8px solid ${activeCardTheme.wrapperBg}`, backgroundColor: activeCardTheme.border,
+                      overflow: 'hidden', flexShrink: 0
                     }}>
                       {avatar.src ? (
                         <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
@@ -303,25 +320,36 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* 名前とBio */}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-                        <h2 style={{ margin: 0, fontSize: '48px', fontWeight: '800', color: activeCardTheme.text, lineHeight: '1' }}>{name}</h2>
-                        <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '600' }}>@{twitterId}</span>
+                    {/* プロフィール情報 */}
+                    <div style={{ flex: 1, paddingTop: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <h2 style={{ margin: 0, fontSize: '46px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px' }}>{name}</h2>
+                        <span style={{ fontSize: '26px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
+                        <span style={{
+                          backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText,
+                          padding: '10px 20px', borderRadius: '12px', fontSize: '20px', fontWeight: '800'
+                        }}>
+                          {dc} | {race}
+                        </span>
                       </div>
-                      <div style={{ display: 'inline-block', backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText, padding: '8px 16px', borderRadius: '12px', fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>
-                        {dc} | {race}
-                      </div>
-                      <p style={{ margin: 0, fontSize: '22px', lineHeight: '1.6', color: activeCardTheme.bio, whiteSpace: 'pre-wrap' }}>
+                      <p style={{ margin: '20px 0 0 0', fontSize: '24px', lineHeight: '1.6', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500' }}>
                         {bio}
                       </p>
                     </div>
+
+                    {/* 右上の「•••」 */}
+                    <div style={{ fontSize: '48px', color: activeCardTheme.sub, letterSpacing: '2px', lineHeight: '1', paddingTop: '10px', opacity: 0.6 }}>
+                      •••
+                    </div>
                   </div>
 
-                  {/* 下部：ギャラリーエリア */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', flex: 1 }}>
+                  {/* ギャラリーエリア (3連縦長) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '28px', flex: 1, marginTop: '40px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
-                      <div key={idx} style={{ width: '100%', height: '100%', borderRadius: '16px', backgroundColor: activeCardTheme.border, overflow: 'hidden', position: 'relative' }}>
+                      <div key={idx} style={{
+                        width: '100%', height: '100%', borderRadius: '24px', backgroundColor: activeCardTheme.border,
+                        overflow: 'hidden', position: 'relative'
+                      }}>
                         {item.src ? (
                           <img src={item.src} alt={`SS ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `50% ${item.y}%`, transform: `scale(${item.zoom})` }} />
                         ) : (
@@ -329,6 +357,13 @@ export default function App() {
                         )}
                       </div>
                     ))}
+                  </div>
+
+                  {/* フッター */}
+                  <div style={{ textAlign: 'center', marginTop: '32px' }}>
+                    <span style={{ fontSize: '16px', color: activeCardTheme.sub, fontWeight: '500' }}>
+                      Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.
+                    </span>
                   </div>
 
                 </div>
@@ -366,7 +401,6 @@ function FileUploadButton({ onFileSelect, colors }) {
   );
 }
 
-// 👑 プラス・マイナスボタン付きの新型スライダー！
 function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }) {
   const handleDec = () => onChange(Math.max(min, value - step));
   const handleInc = () => onChange(Math.min(max, value + step));
@@ -375,11 +409,7 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: colors.subText }}>
       <span style={{ width: '40px', fontWeight: 'bold' }}>{label}</span>
       <button onClick={handleDec} style={btnStyle(colors)}>－</button>
-      <input
-        type="range" min={min} max={max} step={step} value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{ flex: 1, accentColor: colors.accent, height: '6px' }}
-      />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} style={{ flex: 1, accentColor: colors.accent, height: '6px' }} />
       <button onClick={handleInc} style={btnStyle(colors)}>＋</button>
     </div>
   );
