@@ -3,6 +3,7 @@ import { toPng } from 'html-to-image';
 
 export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'images' | 'style'
 
   // プロフィール情報
   const [name, setName] = useState('Kanon');
@@ -10,6 +11,18 @@ export default function App() {
   const [race, setRace] = useState("Miqo'te");
   const [twitterId, setTwitterId] = useState('Cheese_Dohee');
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
+
+  // DC & 種族の選択肢
+  const dcOptions = [
+    'Mana', 'Elemental', 'Gaia', 'Meteor', 
+    'Aether', 'Primal', 'Crystal', 'Dynamis', 
+    'Light', 'Chaos', 'Materia'
+  ];
+
+  const raceOptions = [
+    "Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 
+    'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'
+  ];
 
   // フォント選択肢
   const fontOptions = [
@@ -57,8 +70,8 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .app-container { display: grid; grid-template-columns: 400px 1fr; gap: 24px; align-items: start; }
-        @media (max-width: 1024px) { .app-container { display: flex; flex-direction: column-reverse; } }
+        .app-container { display: grid; grid-template-columns: 1fr 420px; gap: 24px; align-items: start; }
+        @media (max-width: 1024px) { .app-container { display: flex; flex-direction: column; } }
       `;
       document.head.appendChild(style);
     }
@@ -156,13 +169,14 @@ export default function App() {
 
   const isLight = siteTheme === 'light';
   const colors = {
-    bg: isLight ? '#f8fafc' : '#0f172a',
+    bg: isLight ? '#f1f5f9' : '#0f172a',
     panelBg: isLight ? '#ffffff' : '#1e293b',
     border: isLight ? '#e2e8f0' : '#334155',
     text: isLight ? '#0f172a' : '#f8fafc',
     subText: isLight ? '#64748b' : '#94a3b8',
-    inputBg: isLight ? '#f1f5f9' : '#0f172a',
-    accent: '#10b981',
+    inputBg: isLight ? '#f8fafc' : '#0f172a',
+    accent: '#6366f1',
+    accentHover: '#4f46e5',
   };
 
   const cardThemes = {
@@ -188,7 +202,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
-      {/* 保存用モーダル */}
+      {/* モーダル */}
       {resultImage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -212,123 +226,31 @@ export default function App() {
       )}
 
       {/* ヘッダー */}
-      <header style={{ backgroundColor: colors.panelBg, borderBottom: `1px solid ${colors.border}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
-        <h1 style={{ margin: 0, fontSize: '14px', fontWeight: '800' }}>📸 FF14 Card Maker</h1>
-        <button onClick={() => setSiteTheme(isLight ? 'dark' : 'light')} style={{ padding: '6px 12px', borderRadius: '20px', border: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, color: colors.text, cursor: 'pointer', fontWeight: 'bold' }}>
+      <header style={{ backgroundColor: colors.panelBg, borderBottom: `1px solid ${colors.border}`, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+        <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>📸 FF14 Card Maker</h1>
+        <button onClick={() => setSiteTheme(isLight ? 'dark' : 'light')} style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, color: colors.text, cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>
           {isLight ? '🌙 ダーク' : '☀️ ライト'}
         </button>
       </header>
 
-      {/* メインエリア */}
-      <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 16px' }}>
+      {/* メインエリア（左: プレビュー / 右: タブ操作パネル） */}
+      <div className="app-container" style={{ maxWidth: '1480px', margin: '0 auto', padding: '24px 16px' }}>
         
-        {/* 左側: 操作パネル */}
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <SectionCard title="👤 プロフィール設定" colors={colors}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div>
-                <label style={labelStyle(colors)}>キャラクター名</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: Kanon" />
-              </div>
-
-              <div>
-                <label style={labelStyle(colors)}>X (Twitter) ID</label>
-                <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div>
-                  <label style={labelStyle(colors)}>データセンター (DC)</label>
-                  <input value={dc} onChange={(e) => setDc(e.target.value)} style={inputStyle(colors)} placeholder="例: Mana" />
-                </div>
-                <div>
-                  <label style={labelStyle(colors)}>種族</label>
-                  <input value={race} onChange={(e) => setRace(e.target.value)} style={inputStyle(colors)} placeholder="例: Miqo'te" />
-                </div>
-              </div>
-
-              <div>
-                <label style={labelStyle(colors)}>自己紹介・ひとこと</label>
-                <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} style={inputStyle(colors)} placeholder="自己紹介テキスト" />
-              </div>
-
-              <div>
-                <label style={labelStyle(colors)}>カードフォント</label>
-                <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-                  {fontOptions.map((f) => <option key={f.label} value={f.value}>{f.label}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle(colors)}>カラーテーマ (16種)</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '4px' }}>
-                  {Object.keys(cardThemes).map((key) => (
-                    <button key={key} onClick={() => setCardThemeKey(key)} style={{
-                      padding: '8px 4px', borderRadius: '6px', border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                      backgroundColor: cardThemes[key].bg, color: cardThemes[key].text, fontSize: '10px', fontWeight: 'bold', cursor: 'pointer'
-                    }}>
-                      {cardThemes[key].name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard title="🖼️ アイコン画像" colors={colors}>
-            <FileUploadButton label="📁 アイコン画像を選択" onFileSelect={handleAvatarUpload} colors={colors} />
-            {avatar.src && (
-              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <Slider label="左右" value={avatar.x} step={1} onChange={(v) => setAvatar({ ...avatar, x: v })} colors={colors} />
-                <Slider label="上下" value={avatar.y} step={1} onChange={(v) => setAvatar({ ...avatar, y: v })} colors={colors} />
-                <Slider label="拡大" value={avatar.zoom} min={1} max={2} step={0.02} onChange={(v) => setAvatar({ ...avatar, zoom: v })} colors={colors} />
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard title="📷 ギャラリー (3枚)" colors={colors}>
-            <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${colors.border}` }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.subText, display: 'block', marginBottom: '4px' }}>
-                まとめて読み込む
-              </label>
-              <label style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
-                backgroundColor: colors.accent, borderRadius: '8px',
-                cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#ffffff'
-              }}>
-                📁 3枚の画像をまとめて選択
-                <input type="file" accept="image/*" multiple onChange={handleBatchGalleryUpload} style={{ display: 'none' }} />
-              </label>
-            </div>
-
-            {[0, 1, 2].map((idx) => (
-              <div key={idx} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: idx !== 2 ? `1px solid ${colors.border}` : 'none' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText }}>SS {idx + 1} {gallery[idx].src && '✅'}</span>
-                <FileUploadButton label={`📁 SS ${idx + 1} を個別に選択`} onFileSelect={handleGalleryUpload(idx)} colors={colors} />
-                {gallery[idx].src && (
-                  <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Slider label="上下" value={gallery[idx].y} step={1} onChange={(v) => { const n = [...gallery]; n[idx].y = v; setGallery(n); }} colors={colors} />
-                    <Slider label="拡大" value={gallery[idx].zoom} min={1} max={2} step={0.02} onChange={(v) => { const n = [...gallery]; n[idx].zoom = v; setGallery(n); }} colors={colors} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </SectionCard>
-        </div>
-
-        {/* 右側: プレビュー ＆ 保存エリア */}
-        <div style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* 左側: カードプレビューエリア */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'sticky', top: '70px' }}>
+          
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', maxWidth: '600px', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
-              marginBottom: '16px', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+              marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
+              transition: 'all 0.2s ease'
             }}
           >
-            {isGenerating ? '⏳ 生成中...' : '📥 画像を生成する (長押し保存対応)'}
+            {isGenerating ? '⏳ 生成中...' : '📥 画像を保存する'}
           </button>
 
           <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
@@ -385,7 +307,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* ギャラリーエリア (画像突き抜け徹底防止版) */}
+                  {/* ギャラリーエリア */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{
@@ -397,15 +319,9 @@ export default function App() {
                             src={item.src}
                             alt={`SS ${idx+1}`}
                             style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              objectPosition: `50% ${item.y}%`,
-                              transform: `scale(${item.zoom})`,
-                              transformOrigin: `50% ${item.y}%`
+                              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                              objectFit: 'cover', objectPosition: `50% ${item.y}%`,
+                              transform: `scale(${item.zoom})`, transformOrigin: `50% ${item.y}%`
                             }}
                           />
                         ) : (
@@ -428,17 +344,166 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* 右側: タブ型操作パネル */}
+        <div style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          
+          {/* タブヘッダー */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg }}>
+            <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>
+              👤 プロフィール
+            </TabButton>
+            <TabButton active={activeTab === 'images'} onClick={() => setActiveTab('images')} colors={colors}>
+              🖼️ 画像設定
+            </TabButton>
+            <TabButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} colors={colors}>
+              🎨 デザイン
+            </TabButton>
+          </div>
+
+          {/* タブコンテンツ */}
+          <div style={{ padding: '20px' }}>
+            
+            {/* タブ1: プロフィール */}
+            {activeTab === 'profile' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={labelStyle(colors)}>キャラクター名</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: Kanon" />
+                </div>
+
+                <div>
+                  <label style={labelStyle(colors)}>X (Twitter) ID</label>
+                  <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
+                </div>
+
+                {/* DC・種族 (プルダウン選択) */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={labelStyle(colors)}>データセンター (DC)</label>
+                    <select value={dc} onChange={(e) => setDc(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
+                      {dcOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle(colors)}>種族</label>
+                    <select value={race} onChange={(e) => setRace(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
+                      {raceOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle(colors)}>自己紹介・ひとこと</label>
+                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} style={inputStyle(colors)} placeholder="自己紹介テキスト" />
+                </div>
+              </div>
+            )}
+
+            {/* タブ2: 画像設定 */}
+            {activeTab === 'images' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.text }}>👤 アイコン画像</h4>
+                  <FileUploadButton label="📁 画像を変更" onFileSelect={handleAvatarUpload} colors={colors} />
+                  {avatar.src && (
+                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <Slider label="左右" value={avatar.x} step={1} onChange={(v) => setAvatar({ ...avatar, x: v })} colors={colors} />
+                      <Slider label="上下" value={avatar.y} step={1} onChange={(v) => setAvatar({ ...avatar, y: v })} colors={colors} />
+                      <Slider label="拡大" value={avatar.zoom} min={1} max={2} step={0.02} onChange={(v) => setAvatar({ ...avatar, zoom: v })} colors={colors} />
+                    </div>
+                  )}
+                </div>
+
+                <hr style={{ border: 'none', borderTop: `1px solid ${colors.border}`, margin: 0 }} />
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ margin: 0, fontSize: '13px', color: colors.text }}>📷 ギャラリー画像 (3枚)</h4>
+                  </div>
+                  
+                  <label style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
+                    backgroundColor: colors.accent, borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#ffffff', marginBottom: '16px'
+                  }}>
+                    📁 3枚まとめて読み込む
+                    <input type="file" accept="image/*" multiple onChange={handleBatchGalleryUpload} style={{ display: 'none' }} />
+                  </label>
+
+                  {[0, 1, 2].map((idx) => (
+                    <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: idx !== 2 ? `1px solid ${colors.border}` : 'none' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText }}>SS {idx + 1} {gallery[idx].src && '✅'}</span>
+                      <FileUploadButton label={`📁 SS ${idx + 1} を個別に選択`} onFileSelect={handleGalleryUpload(idx)} colors={colors} />
+                      {gallery[idx].src && (
+                        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <Slider label="上下" value={gallery[idx].y} step={1} onChange={(v) => { const n = [...gallery]; n[idx].y = v; setGallery(n); }} colors={colors} />
+                          <Slider label="拡大" value={gallery[idx].zoom} min={1} max={2} step={0.02} onChange={(v) => { const n = [...gallery]; n[idx].zoom = v; setGallery(n); }} colors={colors} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* タブ3: デザイン・テーマ */}
+            {activeTab === 'style' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={labelStyle(colors)}>カードフォント</label>
+                  <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
+                    {fontOptions.map((f) => <option key={f.label} value={f.value}>{f.label}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle(colors)}>カラーテーマ (16種)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px' }}>
+                    {Object.keys(cardThemes).map((key) => (
+                      <button key={key} onClick={() => setCardThemeKey(key)} style={{
+                        padding: '10px 8px', borderRadius: '8px',
+                        border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                        backgroundColor: cardThemes[key].bg, color: cardThemes[key].text, fontSize: '12px', fontWeight: 'bold', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                      }}>
+                        <span>{cardThemes[key].name}</span>
+                        {cardThemeKey === key && <span>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
 
-function SectionCard({ title, children, colors }) {
+function TabButton({ active, onClick, children, colors }) {
   return (
-    <div style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-      <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '800' }}>{title}</h3>
+    <button
+      onClick={onClick}
+      style={{
+        padding: '12px 8px', border: 'none',
+        backgroundColor: active ? colors.panelBg : 'transparent',
+        color: active ? colors.accent : colors.subText,
+        fontWeight: active ? '800' : '600',
+        fontSize: '12px', cursor: 'pointer',
+        borderBottom: active ? `2px solid ${colors.accent}` : '2px solid transparent',
+        transition: 'all 0.15s ease'
+      }}
+    >
       {children}
-    </div>
+    </button>
   );
 }
 
@@ -461,7 +526,7 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: colors.subText }}>
-      <span style={{ width: '40px', fontWeight: 'bold' }}>{label}</span>
+      <span style={{ width: '36px', fontWeight: 'bold' }}>{label}</span>
       <button onClick={handleDec} style={btnStyle(colors)}>－</button>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} style={{ flex: 1, accentColor: colors.accent, height: '6px' }} />
       <button onClick={handleInc} style={btnStyle(colors)}>＋</button>
@@ -470,7 +535,7 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
 }
 
 const labelStyle = (colors) => ({
-  fontSize: '11px', fontWeight: 'bold', color: colors.subText, display: 'block', marginBottom: '2px'
+  fontSize: '11px', fontWeight: 'bold', color: colors.subText, display: 'block', marginBottom: '4px'
 });
 
 const inputStyle = (colors) => ({
