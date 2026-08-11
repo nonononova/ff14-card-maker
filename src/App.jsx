@@ -70,7 +70,7 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .app-container { display: grid; grid-template-columns: 1fr 420px; gap: 24px; align-items: start; }
+        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
         @media (max-width: 1024px) { .app-container { display: flex; flex-direction: column; } }
       `;
       document.head.appendChild(style);
@@ -176,7 +176,6 @@ export default function App() {
     subText: isLight ? '#64748b' : '#94a3b8',
     inputBg: isLight ? '#f8fafc' : '#0f172a',
     accent: '#6366f1',
-    accentHover: '#4f46e5',
   };
 
   const cardThemes = {
@@ -233,17 +232,17 @@ export default function App() {
         </button>
       </header>
 
-      {/* メインエリア（左: プレビュー / 右: タブ操作パネル） */}
-      <div className="app-container" style={{ maxWidth: '1480px', margin: '0 auto', padding: '24px 16px' }}>
+      {/* メインエリア */}
+      <div className="app-container" style={{ maxWidth: '100%', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
-        {/* 左側: カードプレビューエリア */}
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'sticky', top: '70px' }}>
+        {/* 左側: プレビュー */}
+        <div style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', maxWidth: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
               marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
@@ -272,7 +271,7 @@ export default function App() {
                   overflow: 'hidden'
                 }}>
                   
-                  {/* ヘッダーエリア */}
+                  {/* ヘッダー */}
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                     <div style={{
                       width: '150px', height: '150px', borderRadius: '50%',
@@ -307,7 +306,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* ギャラリーエリア */}
+                  {/* ギャラリー */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{
@@ -345,24 +344,24 @@ export default function App() {
           </div>
         </div>
 
-        {/* 右側: タブ型操作パネル */}
-        <div style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        {/* 右側: タブ操作パネル */}
+        <div style={{ width: '100%', backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
           
           {/* タブヘッダー */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg }}>
             <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>
-              👤 プロフィール
+              👤 プロフ
             </TabButton>
             <TabButton active={activeTab === 'images'} onClick={() => setActiveTab('images')} colors={colors}>
-              🖼️ 画像設定
+              🖼️ 画像
             </TabButton>
             <TabButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} colors={colors}>
-              🎨 デザイン
+              🎨 見ため
             </TabButton>
           </div>
 
           {/* タブコンテンツ */}
-          <div style={{ padding: '20px' }}>
+          <div style={{ padding: '16px' }}>
             
             {/* タブ1: プロフィール */}
             {activeTab === 'profile' && (
@@ -377,9 +376,9 @@ export default function App() {
                   <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
                 </div>
 
-                {/* DC・種族 (プルダウン選択) */}
+                {/* DC・種族 (崩れ防止版) */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <label style={labelStyle(colors)}>データセンター (DC)</label>
                     <select value={dc} onChange={(e) => setDc(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
                       {dcOptions.map((item) => (
@@ -388,7 +387,7 @@ export default function App() {
                     </select>
                   </div>
 
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <label style={labelStyle(colors)}>種族</label>
                     <select value={race} onChange={(e) => setRace(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
                       {raceOptions.map((item) => (
@@ -407,7 +406,7 @@ export default function App() {
 
             {/* タブ2: 画像設定 */}
             {activeTab === 'images' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.text }}>👤 アイコン画像</h4>
                   <FileUploadButton label="📁 画像を変更" onFileSelect={handleAvatarUpload} colors={colors} />
@@ -423,9 +422,7 @@ export default function App() {
                 <hr style={{ border: 'none', borderTop: `1px solid ${colors.border}`, margin: 0 }} />
 
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h4 style={{ margin: 0, fontSize: '13px', color: colors.text }}>📷 ギャラリー画像 (3枚)</h4>
-                  </div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.text }}>📷 ギャラリー画像 (3枚)</h4>
                   
                   <label style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
@@ -436,7 +433,7 @@ export default function App() {
                   </label>
 
                   {[0, 1, 2].map((idx) => (
-                    <div key={idx} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: idx !== 2 ? `1px solid ${colors.border}` : 'none' }}>
+                    <div key={idx} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: idx !== 2 ? `1px solid ${colors.border}` : 'none' }}>
                       <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText }}>SS {idx + 1} {gallery[idx].src && '✅'}</span>
                       <FileUploadButton label={`📁 SS ${idx + 1} を個別に選択`} onFileSelect={handleGalleryUpload(idx)} colors={colors} />
                       {gallery[idx].src && (
@@ -493,13 +490,14 @@ function TabButton({ active, onClick, children, colors }) {
     <button
       onClick={onClick}
       style={{
-        padding: '12px 8px', border: 'none',
+        padding: '12px 4px', border: 'none',
         backgroundColor: active ? colors.panelBg : 'transparent',
         color: active ? colors.accent : colors.subText,
         fontWeight: active ? '800' : '600',
-        fontSize: '12px', cursor: 'pointer',
+        fontSize: '13px', cursor: 'pointer',
         borderBottom: active ? `2px solid ${colors.accent}` : '2px solid transparent',
-        transition: 'all 0.15s ease'
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap'
       }}
     >
       {children}
