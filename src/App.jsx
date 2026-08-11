@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { toPng } from 'html-to-image';
+// ⭐ ライブラリを html2canvas に変更
+import html2canvas from 'html2canvas';
 
 export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
@@ -13,16 +14,8 @@ export default function App() {
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
 
   // DC & 種族の選択肢
-  const dcOptions = [
-    'Mana', 'Elemental', 'Gaia', 'Meteor', 
-    'Aether', 'Primal', 'Crystal', 'Dynamis', 
-    'Light', 'Chaos', 'Materia'
-  ];
-
-  const raceOptions = [
-    "Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 
-    'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'
-  ];
+  const dcOptions = ['Mana', 'Elemental', 'Gaia', 'Meteor', 'Aether', 'Primal', 'Crystal', 'Dynamis', 'Light', 'Chaos', 'Materia'];
+  const raceOptions = ["Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'];
 
   // フォント選択肢
   const fontOptions = [
@@ -59,8 +52,6 @@ export default function App() {
     gold: { name: 'ゴールド', bg: '#fefce8', wrapperBg: '#fef08a', text: '#713f12', sub: '#ca8a04', bio: '#422006', border: '#fde047', badgeBg: '#fde047', badgeText: '#854d0e', shadow: '0 15px 40px rgba(113, 63, 18, 0.15)' },
     white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.08)' },
     monochrome: { name: 'モノクロ', bg: '#000000', wrapperBg: '#171717', text: '#ffffff', sub: '#a3a3a3', bio: '#d4d4d4', border: '#262626', badgeBg: '#262626', badgeText: '#ffffff', shadow: '0 25px 60px rgba(0, 0, 0, 0.9)' },
-    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)' },
-    astral: { name: 'アストラル', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#1e293b', badgeBg: '#1e293b', badgeText: '#38bdf8', shadow: '0 25px 60px rgba(0, 0, 0, 0.7)' },
     forest: { name: 'フォレスト', bg: '#f4fbf7', wrapperBg: '#d1fae5', text: '#065f46', sub: '#059669', bio: '#022c22', border: '#a7f3d0', badgeBg: '#a7f3d0', badgeText: '#047857', shadow: '0 15px 40px rgba(6, 95, 70, 0.1)' },
     rose: { name: 'ロゼ', bg: '#fff1f2', wrapperBg: '#ffe4e6', text: '#9f1239', sub: '#e11d48', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#be123c', shadow: '0 15px 40px rgba(159, 18, 57, 0.1)' }
   };
@@ -96,20 +87,10 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .app-container { 
-          display: grid; 
-          grid-template-columns: minmax(0, 1fr) 380px; 
-          gap: 24px; 
-          align-items: start; 
-        }
+        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
         @media (max-width: 1024px) { 
           .app-container { display: flex; flex-direction: column; } 
-          .preview-area {
-            position: sticky;
-            top: 54px;
-            z-index: 80;
-            padding-bottom: 12px;
-          }
+          .preview-area { position: sticky; top: 54px; z-index: 80; padding-bottom: 12px; }
         }
       `;
       document.head.appendChild(style);
@@ -120,7 +101,6 @@ export default function App() {
     const updateScale = () => {
       if (containerRef.current) {
         const parentWidth = containerRef.current.offsetWidth;
-        // PC大画面時は幅いっぱいに拡大表示
         const newScale = Math.min(parentWidth / 1200, 1);
         setScale(newScale);
       }
@@ -131,15 +111,13 @@ export default function App() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // 画像圧縮処理 (スマホ向け軽量化 & CORS問題対応準備)
   const compressImage = useCallback((file, maxWidth = 1000) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
-        // ここで Anonymous を設定することで、Canvas描画時のCORS問題を回避
-        img.crossOrigin = "Anonymous";
+        img.crossOrigin = "Anonymous"; // CORS対策
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -153,7 +131,6 @@ export default function App() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          // スマホのメモリ負荷を下げるためjpeg、画質0.8
           resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
       };
@@ -192,35 +169,46 @@ export default function App() {
     }
   };
 
-  // 画像生成処理 (スマホでのSS反映 & 保存問題完全修正)
+  // ⭐ 画像生成処理 (html2canvasを用いたスマホ完全対応版)
   const handleGenerate = async () => {
     if (!cardRef.current) return;
     setIsGenerating(true);
-    setResultImage(null); // 以前の画像をクリア
+    setResultImage(null);
 
-    // スマホSafari等で外部画像がCanvasに反映されない問題を回避するためのCORS対応設定
-    const filter = (node) => {
-      // 特定の要素を除外したい場合はここにロジックを書く
-      return true; 
-    };
+    // スマホでのズレを防ぐため、一時的にスクロールをトップに戻す
+    window.scrollTo(0, 0);
 
     try {
-      // html-to-image の設定をスマホ向けに最適化
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true, // キャッシュを無視して最新の画像を読み込む
-        pixelRatio: 1.5, // 解像度 (1.0〜2.0の間が推奨)
-        skipFonts: false, // フォントを含める
-        filter: filter,
-        // スマホで画像が真っ白になる場合のプレースホルダー(おまじない)
-        imagePlaceholder: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", 
-        style: { 
-          transform: 'scale(1)', 
-          transformOrigin: 'top left',
-          // 描画バグを防ぐため、生成時のみ特定のスタイルを適用
-          webkitFontSmoothing: 'antialiased',
-          mozOsxFontSmoothing: 'grayscale',
+      // html2canvas のオプション設定
+      const options = {
+        scale: 2, // 高画質化 (1.5〜2.0が推奨)
+        useCORS: true, // CORS対応画像を読み込む
+        allowTaint: true, // クロスドメイン画像の描画を許可
+        backgroundColor: activeCardTheme.wrapperBg, // 背景色を指定
+        width: 1200, // 元のサイズを指定
+        height: 800,
+        // スマホでの表示崩れを防ぐための設定
+        scrollX: 0,
+        scrollY: -window.scrollY, // 現在のスクロール位置を補正
+        windowWidth: document.documentElement.offsetWidth,
+        windowHeight: document.documentElement.offsetHeight,
+        // ⭐ 生成時のみ縮小(scale)を解除する
+        onclone: (clonedDoc) => {
+          const clonedCard = clonedDoc.getElementById('capture-card');
+          const clonedWrapper = clonedDoc.getElementById('capture-wrapper');
+          if (clonedCard && clonedWrapper) {
+            clonedWrapper.style.transform = 'scale(1)';
+            clonedWrapper.style.width = '1200px';
+            clonedWrapper.style.height = '800px';
+          }
         }
-      });
+      };
+
+      // ⭐ 画像生成実行
+      const canvas = await html2canvas(cardRef.current, options);
+      
+      // Canvasを画像データ(Base64)に変換
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
       
       if (!dataUrl || dataUrl === 'data:,') {
         throw new Error('Image generation failed');
@@ -229,7 +217,7 @@ export default function App() {
       setResultImage(dataUrl);
     } catch (err) {
       console.error('Generation Error:', err);
-      alert('画像の生成に失敗しました。スマホのメモリが不足しているか、ブラウザの制約によりSSが読み込めませんでした。時間をおいて再度お試しいただくか、別のブラウザでお試しください。');
+      alert('画像の生成に失敗しました。スマホのメモリ不足やブラウザの制約により、SSの一部が描画できませんでした。時間をおいて再度お試しいただくか、別のブラウザでお試しください。');
     } finally {
       setIsGenerating(false);
     }
@@ -302,15 +290,16 @@ export default function App() {
             {isGenerating ? '⏳ 生成中...' : '📥 画像を保存する'}
           </button>
 
-          <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
+          {/* ⭐ キャプチャ対象のラッパー (IDを追加) */}
+          <div ref={containerRef} id="capture-wrapper" style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
             <div style={{
               width: '1200px', height: '800px',
               transform: `scale(${scale})`, 
               transformOrigin: 'top center',
             }}>
               
-              {/* カード本体 */}
-              <div ref={cardRef} style={{
+              {/* ⭐ カード本体 (IDを追加) */}
+              <div ref={cardRef} id="capture-card" style={{
                 width: '1200px', height: '800px', backgroundColor: activeCardTheme.wrapperBg,
                 padding: '40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column'
               }}>
@@ -509,7 +498,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={labelStyle(colors)}>カラーテーマ (16種)</label>
+                  <label style={labelStyle(colors)}>カラーテーマ (全24種)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
                     {Object.keys(cardThemes).map((key) => (
                       <button key={key} onClick={() => setCardThemeKey(key)} style={{
