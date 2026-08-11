@@ -38,7 +38,6 @@ export default function App() {
   const cardRef = useRef(null);
   const containerRef = useRef(null);
   
-  // プレビューの縮小率（スマホ画面に収める用）
   const [scale, setScale] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState(null);
@@ -112,7 +111,6 @@ export default function App() {
     }
   };
 
-  // 3枚まとめて選択・読み込み
   const handleBatchGalleryUpload = async (e) => {
     const files = Array.from(e.target.files).slice(0, 3);
     if (files.length === 0) return;
@@ -125,7 +123,6 @@ export default function App() {
     setGallery(newGallery);
   };
 
-  // 1枚ずつ個別選択
   const handleGalleryUpload = (index) => async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -290,7 +287,6 @@ export default function App() {
           </SectionCard>
 
           <SectionCard title="📷 ギャラリー (3枚)" colors={colors}>
-            {/* 3枚一括アップロードボタン */}
             <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${colors.border}` }}>
               <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.subText, display: 'block', marginBottom: '4px' }}>
                 まとめて読み込む
@@ -305,7 +301,6 @@ export default function App() {
               </label>
             </div>
 
-            {/* 各スロット個別調整 */}
             {[0, 1, 2].map((idx) => (
               <div key={idx} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: idx !== 2 ? `1px solid ${colors.border}` : 'none' }}>
                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText }}>SS {idx + 1} {gallery[idx].src && '✅'}</span>
@@ -350,14 +345,15 @@ export default function App() {
               }}>
                 <div style={{
                   flex: 1, backgroundColor: activeCardTheme.bg, borderRadius: '40px',
-                  padding: '40px 48px', boxSizing: 'border-box', fontFamily: cardFont,
-                  boxShadow: activeCardTheme.shadow, display: 'flex', flexDirection: 'column'
+                  padding: '36px 44px', boxSizing: 'border-box', fontFamily: cardFont,
+                  boxShadow: activeCardTheme.shadow, display: 'flex', flexDirection: 'column',
+                  overflow: 'hidden'
                 }}>
                   
                   {/* ヘッダーエリア */}
-                  <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                     <div style={{
-                      width: '160px', height: '160px', borderRadius: '50%',
+                      width: '150px', height: '150px', borderRadius: '50%',
                       border: `8px solid ${activeCardTheme.wrapperBg}`, backgroundColor: activeCardTheme.border,
                       overflow: 'hidden', flexShrink: 0
                     }}>
@@ -368,36 +364,50 @@ export default function App() {
                       )}
                     </div>
 
-                    <div style={{ flex: 1, paddingTop: '10px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <h2 style={{ margin: 0, fontSize: '46px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px' }}>{name}</h2>
-                        <span style={{ fontSize: '26px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
+                    <div style={{ flex: 1, paddingTop: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px' }}>{name}</h2>
+                        <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
                         <span style={{
                           backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText,
-                          padding: '10px 20px', borderRadius: '12px', fontSize: '20px', fontWeight: '800'
+                          padding: '8px 16px', borderRadius: '12px', fontSize: '18px', fontWeight: '800'
                         }}>
                           {dc} | {race}
                         </span>
                       </div>
-                      <p style={{ margin: '20px 0 0 0', fontSize: '24px', lineHeight: '1.6', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500' }}>
+                      <p style={{ margin: '14px 0 0 0', fontSize: '22px', lineHeight: '1.5', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500' }}>
                         {bio}
                       </p>
                     </div>
 
-                    <div style={{ fontSize: '48px', color: activeCardTheme.sub, letterSpacing: '2px', lineHeight: '1', paddingTop: '10px', opacity: 0.6 }}>
+                    <div style={{ fontSize: '44px', color: activeCardTheme.sub, letterSpacing: '2px', lineHeight: '1', paddingTop: '6px', opacity: 0.6 }}>
                       •••
                     </div>
                   </div>
 
-                  {/* ギャラリーエリア */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '28px', flex: 1, marginTop: '40px', minHeight: 0 }}>
+                  {/* ギャラリーエリア (画像突き抜け徹底防止版) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{
                         width: '100%', height: '100%', borderRadius: '24px', backgroundColor: activeCardTheme.border,
-                        overflow: 'hidden', position: 'relative'
+                        overflow: 'hidden', position: 'relative', isolation: 'isolate', transform: 'translateZ(0)'
                       }}>
                         {item.src ? (
-                          <img src={item.src} alt={`SS ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `50% ${item.y}%`, transform: `scale(${item.zoom})` }} />
+                          <img
+                            src={item.src}
+                            alt={`SS ${idx+1}`}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: `50% ${item.y}%`,
+                              transform: `scale(${item.zoom})`,
+                              transformOrigin: `50% ${item.y}%`
+                            }}
+                          />
                         ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeCardTheme.sub, fontSize: '30px' }}>📷 {idx + 1}</div>
                         )}
@@ -406,8 +416,8 @@ export default function App() {
                   </div>
 
                   {/* フッター */}
-                  <div style={{ textAlign: 'center', marginTop: '32px' }}>
-                    <span style={{ fontSize: '16px', color: activeCardTheme.sub, fontWeight: '500' }}>
+                  <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                    <span style={{ fontSize: '15px', color: activeCardTheme.sub, fontWeight: '500' }}>
                       Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.
                     </span>
                   </div>
