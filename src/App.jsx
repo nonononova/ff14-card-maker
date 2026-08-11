@@ -25,7 +25,7 @@ export default function App() {
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
   // カードテーマ
-  const [cardThemeKey, setCardThemeKey] = useState('sakura'); // 初期値をサクラに設定
+  const [cardThemeKey, setCardThemeKey] = useState('sakura');
 
   // アイコン画像 ＆ ギャラリー画像
   const [avatar, setAvatar] = useState({ src: null, x: 50, y: 50, zoom: 1 });
@@ -43,7 +43,6 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState(null);
 
-  // Webフォント＆PC/スマホ切り替え用CSSの読み込み
   useEffect(() => {
     const linkId = 'google-fonts-css';
     if (!document.getElementById(linkId)) {
@@ -66,7 +65,6 @@ export default function App() {
     }
   }, []);
 
-  // 画面幅に合わせて1200pxのカードを縮小表示し、かつ「謎の空白」を消すための高さ計算
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
@@ -76,8 +74,7 @@ export default function App() {
       }
     };
     window.addEventListener('resize', updateScale);
-    updateScale(); // 初回実行
-    // パネルの開閉などで幅が変わった時のために少し遅延しても実行
+    updateScale();
     setTimeout(updateScale, 100);
     return () => window.removeEventListener('resize', updateScale);
   }, []);
@@ -115,6 +112,20 @@ export default function App() {
     }
   };
 
+  // 3枚まとめて選択・読み込み
+  const handleBatchGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files).slice(0, 3);
+    if (files.length === 0) return;
+
+    const newGallery = [...gallery];
+    for (let i = 0; i < files.length; i++) {
+      const compressedUrl = await compressImage(files[i], 1000);
+      newGallery[i] = { ...newGallery[i], src: compressedUrl };
+    }
+    setGallery(newGallery);
+  };
+
+  // 1枚ずつ個別選択
   const handleGalleryUpload = (index) => async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -157,7 +168,6 @@ export default function App() {
     accent: '#10b981',
   };
 
-  // 16種類のテーマを完全復活
   const cardThemes = {
     cyber: { name: 'サイバー', bg: '#030712', wrapperBg: '#0f172a', text: '#22d3ee', sub: '#64748b', bio: '#94a3b8', border: '#1f2937', badgeBg: '#1f2937', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(34, 211, 238, 0.35)' },
     blood: { name: 'ブラッド', bg: '#180202', wrapperBg: '#270303', text: '#f43f5e', sub: '#9f1239', bio: '#fecdd3', border: '#4c0519', badgeBg: '#4c0519', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 63, 94, 0.35)' },
@@ -212,37 +222,64 @@ export default function App() {
         </button>
       </header>
 
-      {/* メインエリア（PCは2カラム、スマホは縦並び） */}
+      {/* メインエリア */}
       <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 16px' }}>
         
         {/* 左側: 操作パネル */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <SectionCard title="👤 プロフィール" colors={colors}>
-            <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="キャラクター名" />
-            <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="X (Twitter) ID" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
-              <input value={dc} onChange={(e) => setDc(e.target.value)} style={inputStyle(colors)} placeholder="DC (例: Mana)" />
-              <input value={race} onChange={(e) => setRace(e.target.value)} style={inputStyle(colors)} placeholder="種族 (例: Miqo'te)" />
-            </div>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} style={inputStyle(colors)} placeholder="ひとこと" />
-            <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-              {fontOptions.map((f) => <option key={f.label} value={f.value}>{f.label}</option>)}
-            </select>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '12px' }}>
-              {Object.keys(cardThemes).map((key) => (
-                <button key={key} onClick={() => setCardThemeKey(key)} style={{
-                  padding: '8px 4px', borderRadius: '6px', border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                  backgroundColor: cardThemes[key].bg, color: cardThemes[key].text, fontSize: '10px', fontWeight: 'bold', cursor: 'pointer'
-                }}>
-                  {cardThemes[key].name}
-                </button>
-              ))}
+          <SectionCard title="👤 プロフィール設定" colors={colors}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div>
+                <label style={labelStyle(colors)}>キャラクター名</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: Kanon" />
+              </div>
+
+              <div>
+                <label style={labelStyle(colors)}>X (Twitter) ID</label>
+                <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div>
+                  <label style={labelStyle(colors)}>データセンター (DC)</label>
+                  <input value={dc} onChange={(e) => setDc(e.target.value)} style={inputStyle(colors)} placeholder="例: Mana" />
+                </div>
+                <div>
+                  <label style={labelStyle(colors)}>種族</label>
+                  <input value={race} onChange={(e) => setRace(e.target.value)} style={inputStyle(colors)} placeholder="例: Miqo'te" />
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle(colors)}>自己紹介・ひとこと</label>
+                <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} style={inputStyle(colors)} placeholder="自己紹介テキスト" />
+              </div>
+
+              <div>
+                <label style={labelStyle(colors)}>カードフォント</label>
+                <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
+                  {fontOptions.map((f) => <option key={f.label} value={f.value}>{f.label}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle(colors)}>カラーテーマ (16種)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '4px' }}>
+                  {Object.keys(cardThemes).map((key) => (
+                    <button key={key} onClick={() => setCardThemeKey(key)} style={{
+                      padding: '8px 4px', borderRadius: '6px', border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                      backgroundColor: cardThemes[key].bg, color: cardThemes[key].text, fontSize: '10px', fontWeight: 'bold', cursor: 'pointer'
+                    }}>
+                      {cardThemes[key].name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </SectionCard>
 
           <SectionCard title="🖼️ アイコン画像" colors={colors}>
-            <FileUploadButton onFileSelect={handleAvatarUpload} colors={colors} />
+            <FileUploadButton label="📁 アイコン画像を選択" onFileSelect={handleAvatarUpload} colors={colors} />
             {avatar.src && (
               <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <Slider label="左右" value={avatar.x} step={1} onChange={(v) => setAvatar({ ...avatar, x: v })} colors={colors} />
@@ -253,10 +290,26 @@ export default function App() {
           </SectionCard>
 
           <SectionCard title="📷 ギャラリー (3枚)" colors={colors}>
+            {/* 3枚一括アップロードボタン */}
+            <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${colors.border}` }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: colors.subText, display: 'block', marginBottom: '4px' }}>
+                まとめて読み込む
+              </label>
+              <label style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
+                backgroundColor: colors.accent, borderRadius: '8px',
+                cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#ffffff'
+              }}>
+                📁 3枚の画像をまとめて選択
+                <input type="file" accept="image/*" multiple onChange={handleBatchGalleryUpload} style={{ display: 'none' }} />
+              </label>
+            </div>
+
+            {/* 各スロット個別調整 */}
             {[0, 1, 2].map((idx) => (
               <div key={idx} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: idx !== 2 ? `1px solid ${colors.border}` : 'none' }}>
                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText }}>SS {idx + 1} {gallery[idx].src && '✅'}</span>
-                <FileUploadButton onFileSelect={handleGalleryUpload(idx)} colors={colors} />
+                <FileUploadButton label={`📁 SS ${idx + 1} を個別に選択`} onFileSelect={handleGalleryUpload(idx)} colors={colors} />
                 {gallery[idx].src && (
                   <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <Slider label="上下" value={gallery[idx].y} step={1} onChange={(v) => { const n = [...gallery]; n[idx].y = v; setGallery(n); }} colors={colors} />
@@ -283,10 +336,6 @@ export default function App() {
             {isGenerating ? '⏳ 生成中...' : '📥 画像を生成する (長押し保存対応)'}
           </button>
 
-          {/* 
-            【スマホ空白回避策】 
-            scale計算に合わせて親コンテナの高さを動的に変化させることで、下部の巨大な空白を消滅させます
-          */}
           <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
             <div style={{
               width: '1200px', height: '800px',
@@ -294,7 +343,7 @@ export default function App() {
               transformOrigin: 'top center',
             }}>
               
-              {/* === ここから下が出力される画像本体 (Kanon_ss_gallery_card_2 完全再現) === */}
+              {/* カード本体 */}
               <div ref={cardRef} style={{
                 width: '1200px', height: '800px', backgroundColor: activeCardTheme.wrapperBg,
                 padding: '40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column'
@@ -307,7 +356,6 @@ export default function App() {
                   
                   {/* ヘッダーエリア */}
                   <div style={{ display: 'flex', gap: '28px', alignItems: 'flex-start' }}>
-                    {/* アバター */}
                     <div style={{
                       width: '160px', height: '160px', borderRadius: '50%',
                       border: `8px solid ${activeCardTheme.wrapperBg}`, backgroundColor: activeCardTheme.border,
@@ -320,7 +368,6 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* プロフィール情報 */}
                     <div style={{ flex: 1, paddingTop: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <h2 style={{ margin: 0, fontSize: '46px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px' }}>{name}</h2>
@@ -337,13 +384,12 @@ export default function App() {
                       </p>
                     </div>
 
-                    {/* 右上の「•••」 */}
                     <div style={{ fontSize: '48px', color: activeCardTheme.sub, letterSpacing: '2px', lineHeight: '1', paddingTop: '10px', opacity: 0.6 }}>
                       •••
                     </div>
                   </div>
 
-                  {/* ギャラリーエリア (3連縦長) */}
+                  {/* ギャラリーエリア */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '28px', flex: 1, marginTop: '40px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{
@@ -368,7 +414,6 @@ export default function App() {
 
                 </div>
               </div>
-              {/* === 出力画像ここまで === */}
 
             </div>
           </div>
@@ -378,7 +423,6 @@ export default function App() {
   );
 }
 
-// 部品コンポーネント
 function SectionCard({ title, children, colors }) {
   return (
     <div style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
@@ -388,14 +432,14 @@ function SectionCard({ title, children, colors }) {
   );
 }
 
-function FileUploadButton({ onFileSelect, colors }) {
+function FileUploadButton({ label, onFileSelect, colors }) {
   return (
     <label style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
       backgroundColor: colors.inputBg, border: `1px dashed ${colors.border}`, borderRadius: '8px',
       cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: colors.text, marginTop: '4px'
     }}>
-      📁 画像を選択
+      {label}
       <input type="file" accept="image/*" onChange={onFileSelect} style={{ display: 'none' }} />
     </label>
   );
@@ -415,9 +459,13 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
   );
 }
 
+const labelStyle = (colors) => ({
+  fontSize: '11px', fontWeight: 'bold', color: colors.subText, display: 'block', marginBottom: '2px'
+});
+
 const inputStyle = (colors) => ({
   width: '100%', padding: '10px', backgroundColor: colors.inputBg, border: `1px solid ${colors.border}`,
-  borderRadius: '8px', color: colors.text, fontSize: '13px', boxSizing: 'border-box', outline: 'none', marginTop: '6px'
+  borderRadius: '8px', color: colors.text, fontSize: '13px', boxSizing: 'border-box', outline: 'none'
 });
 
 const btnStyle = (colors) => ({
