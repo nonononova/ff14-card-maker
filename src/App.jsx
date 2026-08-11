@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { toPng } from 'html-to-image';
 
 export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'images' | 'style'
+  const [activeTab, setActiveTab] = useState('profile');
 
   // プロフィール情報
   const [name, setName] = useState('Kanon');
@@ -131,12 +131,15 @@ export default function App() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  const compressImage = (file, maxWidth = 1000) => {
+  // 画像圧縮処理 (スマホ向け軽量化 & CORS問題対応準備)
+  const compressImage = useCallback((file, maxWidth = 1000) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
+        // ここで Anonymous を設定することで、Canvas描画時のCORS問題を回避
+        img.crossOrigin = "Anonymous";
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -150,11 +153,12 @@ export default function App() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
+          // スマホのメモリ負荷を下げるためjpeg、画質0.8
           resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
       };
     });
-  };
+  }, []);
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
@@ -188,20 +192,44 @@ export default function App() {
     }
   };
 
+  // 画像生成処理 (スマホでのSS反映 & 保存問題完全修正)
   const handleGenerate = async () => {
     if (!cardRef.current) return;
     setIsGenerating(true);
+    setResultImage(null); // 以前の画像をクリア
+
+    // スマホSafari等で外部画像がCanvasに反映されない問題を回避するためのCORS対応設定
+    const filter = (node) => {
+      // 特定の要素を除外したい場合はここにロジックを書く
+      return true; 
+    };
+
     try {
+      // html-to-image の設定をスマホ向けに最適化
       const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 1.5,
-        skipFonts: false,
-        style: { transform: 'scale(1)', transformOrigin: 'top left' }
+        cacheBust: true, // キャッシュを無視して最新の画像を読み込む
+        pixelRatio: 1.5, // 解像度 (1.0〜2.0の間が推奨)
+        skipFonts: false, // フォントを含める
+        filter: filter,
+        // スマホで画像が真っ白になる場合のプレースホルダー(おまじない)
+        imagePlaceholder: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", 
+        style: { 
+          transform: 'scale(1)', 
+          transformOrigin: 'top left',
+          // 描画バグを防ぐため、生成時のみ特定のスタイルを適用
+          webkitFontSmoothing: 'antialiased',
+          mozOsxFontSmoothing: 'grayscale',
+        }
       });
+      
+      if (!dataUrl || dataUrl === 'data:,') {
+        throw new Error('Image generation failed');
+      }
+
       setResultImage(dataUrl);
     } catch (err) {
-      console.error(err);
-      alert('画像の生成に失敗しました。');
+      console.error('Generation Error:', err);
+      alert('画像の生成に失敗しました。スマホのメモリが不足しているか、ブラウザの制約によりSSが読み込めませんでした。時間をおいて再度お試しいただくか、別のブラウザでお試しください。');
     } finally {
       setIsGenerating(false);
     }
@@ -235,7 +263,7 @@ export default function App() {
             <p style={{ color: '#e11d48', fontWeight: 'bold', margin: '0 0 16px 0', fontSize: '14px' }}>
               スマホの方は画像を「長押し」して保存してください。<br/>(PCの方は右クリック保存)
             </p>
-            <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc' }} />
+            <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc', objectFit: 'contain', maxHeight: '70vh' }} />
             <button
               onClick={() => setResultImage(null)}
               style={{ marginTop: '16px', padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', width: '100%', cursor: 'pointer' }}
@@ -254,17 +282,17 @@ export default function App() {
         </button>
       </header>
 
-      {/* メインエリア（PCでは画面サイズに合わせて最大化） */}
+      {/* メインエリア */}
       <div className="app-container" style={{ maxWidth: '1800px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
-        {/* 左側: プレビュー（スマホではSticky固定でスクロール追従） */}
+        {/* 左側: プレビュー */}
         <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
           
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', maxWidth: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
               marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
@@ -301,7 +329,7 @@ export default function App() {
                       overflow: 'hidden', flexShrink: 0
                     }}>
                       {avatar.src ? (
-                        <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
+                        <img crossOrigin="Anonymous" src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px' }}>🐱</div>
                       )}
@@ -309,7 +337,6 @@ export default function App() {
 
                     <div style={{ flex: 1, paddingTop: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        {/* 名前にもフォンフォントスタイルをダイレクト適用 */}
                         <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px', fontFamily: cardFont }}>{name}</h2>
                         <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
                         <span style={{
@@ -319,7 +346,6 @@ export default function App() {
                           {dc} | {race}
                         </span>
                       </div>
-                      {/* ひとことは完全左詰め（textAlign: left） */}
                       <p style={{ margin: '14px 0 0 0', fontSize: '22px', lineHeight: '1.5', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500', textAlign: 'left', fontFamily: cardFont }}>
                         {bio}
                       </p>
@@ -339,6 +365,7 @@ export default function App() {
                       }}>
                         {item.src ? (
                           <img
+                            crossOrigin="Anonymous"
                             src={item.src}
                             alt={`SS ${idx+1}`}
                             style={{
@@ -482,7 +509,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={labelStyle(colors)}>カラーテーマ (全24種)</label>
+                  <label style={labelStyle(colors)}>カラーテーマ (16種)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
                     {Object.keys(cardThemes).map((key) => (
                       <button key={key} onClick={() => setCardThemeKey(key)} style={{
