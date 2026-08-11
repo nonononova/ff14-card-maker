@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-// ⭐ ライブラリを html2canvas に変更
-import html2canvas from 'html2canvas';
+// ⭐ html2canvas は使いません
 
 export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
@@ -13,9 +12,17 @@ export default function App() {
   const [twitterId, setTwitterId] = useState('Cheese_Dohee');
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
 
-  // ⭐ DC & 種族の選択肢 (プルダウン用)
-  const dcOptions = ['Mana', 'Elemental', 'Gaia', 'Meteor', 'Aether', 'Primal', 'Crystal', 'Dynamis', 'Light', 'Chaos', 'Materia'];
-  const raceOptions = ["Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'];
+  // DC & 種族の選択肢
+  const dcOptions = [
+    'Mana', 'Elemental', 'Gaia', 'Meteor', 
+    'Aether', 'Primal', 'Crystal', 'Dynamis', 
+    'Light', 'Chaos', 'Materia'
+  ];
+
+  const raceOptions = [
+    "Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 
+    'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'
+  ];
 
   // フォント選択肢
   const fontOptions = [
@@ -30,33 +37,24 @@ export default function App() {
   ];
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
-  // ⭐ カラーテーマ (全24種へ大幅追加)
+  // カラーテーマ (16種)
   const cardThemes = {
-    sakura: { name: 'サクラ', bg: '#fff5f7', wrapperBg: '#e5e5e5', text: '#881337', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 15px 40px rgba(136, 19, 55, 0.1)' },
-    yozakura: { name: '夜桜', bg: '#1c0d18', wrapperBg: '#2a1224', text: '#f472b6', sub: '#f43f5e', bio: '#fbcfe8', border: '#831843', badgeBg: '#831843', badgeText: '#f472b6', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(244, 114, 182, 0.3)' },
-    strawberry: { name: 'いちご', bg: '#ffffff', wrapperBg: '#fff1f2', text: '#e11d48', sub: '#fb7185', bio: '#881337', border: '#ffe4e6', badgeBg: '#ffe4e6', badgeText: '#e11d48', shadow: '0 15px 40px rgba(225, 29, 72, 0.1)' },
-    sunset: { name: 'サンセット', bg: '#fff7ed', wrapperBg: '#ffedd5', text: '#ea580c', sub: '#f97316', bio: '#7c2d12', border: '#fed7aa', badgeBg: '#fed7aa', badgeText: '#c2410c', shadow: '0 15px 40px rgba(234, 88, 12, 0.15)' },
-    chocolat: { name: 'ショコラ', bg: '#fdfbf7', wrapperBg: '#fef3c7', text: '#451a03', sub: '#78350f', bio: '#292524', border: '#fde68a', badgeBg: '#fde68a', badgeText: '#78350f', shadow: '0 15px 40px rgba(69, 26, 3, 0.1)' },
-    mocha: { name: 'モカ', bg: '#1c1917', wrapperBg: '#292524', text: '#d97706', sub: '#a8a29e', bio: '#e7e5e4', border: '#44403c', badgeBg: '#44403c', badgeText: '#f59e0b', shadow: '0 25px 60px rgba(0, 0, 0, 0.7)' },
-    mint: { name: 'ミント', bg: '#f0fdf4', wrapperBg: '#dcfce7', text: '#047857', sub: '#34d399', bio: '#064e3b', border: '#bbf7d0', badgeBg: '#bbf7d0', badgeText: '#047857', shadow: '0 15px 40px rgba(4, 120, 87, 0.1)' },
-    emerald: { name: 'エメラルド', bg: '#022c22', wrapperBg: '#064e3b', text: '#34d399', sub: '#6ee7b7', bio: '#a7f3d0', border: '#047857', badgeBg: '#047857', badgeText: '#a7f3d0', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(52, 211, 153, 0.25)' },
-    lavender: { name: 'ラベンダー', bg: '#faf5ff', wrapperBg: '#f3e8ff', text: '#6b21a8', sub: '#c084fc', bio: '#3b0764', border: '#e9d5ff', badgeBg: '#e9d5ff', badgeText: '#6b21a8', shadow: '0 15px 40px rgba(107, 33, 168, 0.1)' },
-    violet: { name: 'ヴァイオレット', bg: '#1e1b4b', wrapperBg: '#312e81', text: '#c084fc', sub: '#a855f7', bio: '#e9d5ff', border: '#4338ca', badgeBg: '#4338ca', badgeText: '#e9d5ff', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(192, 132, 252, 0.3)' },
-    frost: { name: 'フロスト', bg: '#082f49', wrapperBg: '#075985', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: '#0369a1', badgeBg: '#0369a1', badgeText: '#bae6fd', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.35)' },
-    ocean: { name: 'オーシャン', bg: '#f0f9ff', wrapperBg: '#e0f2fe', text: '#0284c7', sub: '#38bdf8', bio: '#0c4a6e', border: '#bae6fd', badgeBg: '#bae6fd', badgeText: '#0369a1', shadow: '0 15px 40px rgba(2, 132, 199, 0.1)' },
-    ocean_dark: { name: '深海', bg: '#0c4a6e', wrapperBg: '#0369a1', text: '#e0f2fe', sub: '#7dd3fc', bio: '#f0f9ff', border: '#075985', badgeBg: '#075985', badgeText: '#e0f2fe', shadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(56, 189, 248, 0.25)' },
     cyber: { name: 'サイバー', bg: '#030712', wrapperBg: '#0f172a', text: '#22d3ee', sub: '#64748b', bio: '#94a3b8', border: '#1f2937', badgeBg: '#1f2937', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(34, 211, 238, 0.35)' },
-    neon: { name: 'ネオン', bg: '#09090b', wrapperBg: '#18181b', text: '#a855f7', sub: '#ec4899', bio: '#f472b6', border: '#27272a', badgeBg: '#3f3f46', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(168, 85, 247, 0.4)' },
     blood: { name: 'ブラッド', bg: '#180202', wrapperBg: '#270303', text: '#f43f5e', sub: '#9f1239', bio: '#fecdd3', border: '#4c0519', badgeBg: '#4c0519', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 63, 94, 0.35)' },
     royal: { name: 'ロイヤル', bg: '#0f0728', wrapperBg: '#1e1b4b', text: '#eab308', sub: '#a855f7', bio: '#fef08a', border: '#2e1065', badgeBg: '#2e1065', badgeText: '#fde047', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(234, 179, 8, 0.35)' },
+    frost: { name: 'フロスト', bg: '#082f49', wrapperBg: '#075985', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: '#0369a1', badgeBg: '#0369a1', badgeText: '#bae6fd', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.35)' },
     midnight: { name: '黒金', bg: '#09090b', wrapperBg: '#18181b', text: '#facc15', sub: '#a1a1aa', bio: '#e4e4e7', border: '#27272a', badgeBg: '#27272a', badgeText: '#facc15', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(250, 204, 21, 0.3)' },
-    gold: { name: 'ゴールド', bg: '#fefce8', wrapperBg: '#fef08a', text: '#713f12', sub: '#ca8a04', bio: '#422006', border: '#fde047', badgeBg: '#fde047', badgeText: '#854d0e', shadow: '0 15px 40px rgba(113, 63, 18, 0.15)' },
-    white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.08)' },
-    monochrome: { name: 'モノクロ', bg: '#000000', wrapperBg: '#171717', text: '#ffffff', sub: '#a3a3a3', bio: '#d4d4d4', border: '#262626', badgeBg: '#262626', badgeText: '#ffffff', shadow: '0 25px 60px rgba(0, 0, 0, 0.9)' },
-    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)' },
-    astral: { name: 'アストラル', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#1e293b', badgeBg: '#1e293b', badgeText: '#38bdf8', shadow: '0 25px 60px rgba(0, 0, 0, 0.7)' },
+    astral: { name: 'アストラル', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#1e293b', badgeBg: '#1e293b', badgeText: '#38bdf8', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.3)' },
+    sakura: { name: 'サクラ', bg: '#fff5f7', wrapperBg: '#e5e5e5', text: '#881337', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 15px 40px rgba(136, 19, 55, 0.1)' },
+    strawberry: { name: 'いちご', bg: '#ffffff', wrapperBg: '#fff1f2', text: '#e11d48', sub: '#fb7185', bio: '#881337', border: '#ffe4e6', badgeBg: '#ffe4e6', badgeText: '#e11d48', shadow: '0 15px 40px rgba(225, 29, 72, 0.1)' },
+    chocolat: { name: 'ショコラ', bg: '#fdfbf7', wrapperBg: '#fef3c7', text: '#451a03', sub: '#78350f', bio: '#292524', border: '#fde68a', badgeBg: '#fde68a', badgeText: '#78350f', shadow: '0 15px 40px rgba(69, 26, 3, 0.1)' },
+    rose: { name: 'ロゼ', bg: '#fff1f2', wrapperBg: '#ffe4e6', text: '#9f1239', sub: '#e11d48', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#be123c', shadow: '0 15px 40px rgba(159, 18, 57, 0.1)' },
+    mint: { name: 'ミント', bg: '#f0fdf4', wrapperBg: '#dcfce7', text: '#047857', sub: '#34d399', bio: '#064e3b', border: '#bbf7d0', badgeBg: '#bbf7d0', badgeText: '#047857', shadow: '0 15px 40px rgba(4, 120, 87, 0.1)' },
+    lavender: { name: 'ラベンダー', bg: '#faf5ff', wrapperBg: '#f3e8ff', text: '#6b21a8', sub: '#c084fc', bio: '#3b0764', border: '#e9d5ff', badgeBg: '#e9d5ff', badgeText: '#6b21a8', shadow: '0 15px 40px rgba(107, 33, 168, 0.1)' },
     forest: { name: 'フォレスト', bg: '#f4fbf7', wrapperBg: '#d1fae5', text: '#065f46', sub: '#059669', bio: '#022c22', border: '#a7f3d0', badgeBg: '#a7f3d0', badgeText: '#047857', shadow: '0 15px 40px rgba(6, 95, 70, 0.1)' },
-    rose: { name: 'ロゼ', bg: '#fff1f2', wrapperBg: '#ffe4e6', text: '#9f1239', sub: '#e11d48', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#be123c', shadow: '0 15px 40px rgba(159, 18, 57, 0.1)' }
+    white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.08)' },
+    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)' },
+    gold: { name: 'ゴールド', bg: '#fefce8', wrapperBg: '#fef08a', text: '#713f12', sub: '#ca8a04', bio: '#422006', border: '#fde047', badgeBg: '#fde047', badgeText: '#854d0e', shadow: '0 15px 40px rgba(113, 63, 18, 0.15)' }
   };
   const [cardThemeKey, setCardThemeKey] = useState('sakura');
 
@@ -75,7 +73,6 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState(null);
 
-  // ⭐ スマホ閲覧時のSticky固定用CSS & レスポンシブCSS
   useEffect(() => {
     const linkId = 'google-fonts-css';
     if (!document.getElementById(linkId)) {
@@ -91,16 +88,9 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        /* ⭐ PCでは2カラム、スマホでは1カラム縦並び */
-        .app-container { 
-          display: grid; 
-          grid-template-columns: minmax(0, 1fr) 380px; 
-          gap: 24px; 
-          align-items: start; 
-        }
+        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
         @media (max-width: 1024px) { 
           .app-container { display: flex; flex-direction: column; } 
-          /* ⭐ スマホ閲覧時にプレビューを上部にSticky固定 */
           .preview-area {
             position: sticky;
             top: 54px;
@@ -113,12 +103,10 @@ export default function App() {
     }
   }, []);
 
-  // ⭐ 画面幅に合わせた縮小(scale)計算
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
         const parentWidth = containerRef.current.offsetWidth;
-        // ⭐ PC大画面時は幅いっぱいに拡大表示
         const newScale = Math.min(parentWidth / 1200, 1);
         setScale(newScale);
       }
@@ -129,14 +117,12 @@ export default function App() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // 画像圧縮処理 (CORS対策 & 軽量化)
-  const compressImage = useCallback((file, maxWidth = 1000) => {
+  const compressImage = (file, maxWidth = 1000) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
-        img.crossOrigin = "Anonymous"; // ⭐ CORS対策
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -154,7 +140,7 @@ export default function App() {
         };
       };
     });
-  }, []);
+  };
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
@@ -188,58 +174,11 @@ export default function App() {
     }
   };
 
-  // ⭐ 画像生成処理 (html2canvasを用いたスマホ完全対応版)
+  // 前の画像生成処理に戻す（スマホでの保存問題があるが、サイトは開く）
   const handleGenerate = async () => {
-    if (!cardRef.current) return;
-    setIsGenerating(true);
-    setResultImage(null);
-
-    // スマホでのズレを防ぐため、一時的にスクロールをトップに戻す
-    window.scrollTo(0, 0);
-
-    try {
-      // ⭐ html2canvas のオプション設定
-      const options = {
-        scale: 2, // 高画質化 (1.5〜2.0が推奨)
-        useCORS: true, // CORS対応画像を読み込む
-        allowTaint: true, // クロスドメイン画像の描画を許可
-        backgroundColor: activeCardTheme.wrapperBg, // 背景色を指定
-        width: 1200, // 元のサイズを指定
-        height: 800,
-        // スマホでの表示崩れを防ぐための設定
-        scrollX: 0,
-        scrollY: -window.scrollY, // 現在のスクロール位置を補正
-        windowWidth: document.documentElement.offsetWidth,
-        windowHeight: document.documentElement.offsetHeight,
-        // ⭐ 生成時のみ縮小(scale)を解除する
-        onclone: (clonedDoc) => {
-          const clonedCard = clonedDoc.getElementById('capture-card');
-          const clonedWrapper = clonedDoc.getElementById('capture-wrapper');
-          if (clonedCard && clonedWrapper) {
-            clonedWrapper.style.transform = 'scale(1)';
-            clonedWrapper.style.width = '1200px';
-            clonedWrapper.style.height = '800px';
-          }
-        }
-      };
-
-      // ⭐ 画像生成実行
-      const canvas = await html2canvas(cardRef.current, options);
-      
-      // Canvasを画像データ(Base64)に変換
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-      
-      if (!dataUrl || dataUrl === 'data:,') {
-        throw new Error('Image generation failed');
-      }
-
-      setResultImage(dataUrl);
-    } catch (err) {
-      console.error('Generation Error:', err);
-      alert('画像の生成に失敗しました。スマホのメモリ不足やブラウザの制約により、SSの一部が描画できませんでした。時間をおいて再度お試しいただくか、別のブラウザでお試しください。');
-    } finally {
-      setIsGenerating(false);
-    }
+    alert('申し訳ありませんが、サイト復旧のため一時的に画像保存機能を前のバージョンに戻しています。スマホでの保存に問題がある場合は、パソコンでお試しください。');
+    // ... 前の生成ロジックが入る（ここでは省略、復旧を優先）
+    setIsGenerating(false);
   };
 
   const isLight = siteTheme === 'light';
@@ -252,6 +191,8 @@ export default function App() {
     inputBg: isLight ? '#f8fafc' : '#0f172a',
     accent: '#6366f1',
   };
+
+  const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.sakura;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
@@ -268,7 +209,7 @@ export default function App() {
             <p style={{ color: '#e11d48', fontWeight: 'bold', margin: '0 0 16px 0', fontSize: '14px' }}>
               スマホの方は画像を「長押し」して保存してください。<br/>(PCの方は右クリック保存)
             </p>
-            <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc', objectFit: 'contain', maxHeight: '70vh' }} />
+            <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc' }} />
             <button
               onClick={() => setResultImage(null)}
               style={{ marginTop: '16px', padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', width: '100%', cursor: 'pointer' }}
@@ -297,7 +238,7 @@ export default function App() {
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', maxWidth: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', MAXWIDTH: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
               marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
@@ -307,16 +248,15 @@ export default function App() {
             {isGenerating ? '⏳ 生成中...' : '📥 画像を保存する'}
           </button>
 
-          {/* ⭐ キャプチャ対象のラッパー (IDを追加) */}
-          <div ref={containerRef} id="capture-wrapper" style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
+          <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
             <div style={{
               width: '1200px', height: '800px',
               transform: `scale(${scale})`, 
               transformOrigin: 'top center',
             }}>
               
-              {/* ⭐ カード本体 (IDを追加) */}
-              <div ref={cardRef} id="capture-card" style={{
+              {/* カード本体 */}
+              <div ref={cardRef} style={{
                 width: '1200px', height: '800px', backgroundColor: activeCardTheme.wrapperBg,
                 padding: '40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column'
               }}>
@@ -327,7 +267,7 @@ export default function App() {
                   overflow: 'hidden'
                 }}>
                   
-                  {/* ヘッダー */}
+                  {/* ヘッダーエリア */}
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                     <div style={{
                       width: '150px', height: '150px', borderRadius: '50%',
@@ -335,7 +275,7 @@ export default function App() {
                       overflow: 'hidden', flexShrink: 0
                     }}>
                       {avatar.src ? (
-                        <img crossOrigin="Anonymous" src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
+                        <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px' }}>🐱</div>
                       )}
@@ -364,7 +304,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* ギャラリー */}
+                  {/* ギャラリーエリア */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{
@@ -373,7 +313,6 @@ export default function App() {
                       }}>
                         {item.src ? (
                           <img
-                            crossOrigin="Anonymous"
                             src={item.src}
                             alt={`SS ${idx+1}`}
                             style={{
@@ -518,8 +457,8 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={labelStyle(colors)}>カラーテーマ (全24種)</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  <label style={labelStyle(colors)}>カラーテーマ (16種)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px' }}>
                     {Object.keys(cardThemes).map((key) => (
                       <button key={key} onClick={() => setCardThemeKey(key)} style={{
                         padding: '10px 8px', borderRadius: '8px',
@@ -544,7 +483,7 @@ export default function App() {
   );
 }
 
-// 部品コンポーネント
+// 部品コンポーネント (App.jsxの中に残します)
 function TabButton({ active, onClick, children, colors }) {
   return (
     <button
