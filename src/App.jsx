@@ -37,7 +37,7 @@ export default function App() {
 
   const cardRef = useRef(null);
 
-  // Webフォント (Google Fonts) を確実に読み込み
+  // Webフォント ＆ スマホ用レスポンシブCSSの動的読み込み
   useEffect(() => {
     const linkId = 'google-fonts-css';
     if (!document.getElementById(linkId)) {
@@ -46,6 +46,39 @@ export default function App() {
       link.href = 'https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700&family=Potta+One&family=Yuji+Syuku&family=Kiwi+Maru:wght@500;700&family=Shippori+Mincho:wght@700&family=Zen+Maru+Gothic:wght@700;900&display=swap';
       link.rel = 'stylesheet';
       document.head.appendChild(link);
+    }
+
+    const styleId = 'responsive-custom-css';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        @media (max-width: 1024px) {
+          .app-main-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .app-preview-container {
+            position: static !important;
+            order: -1;
+          }
+        }
+        @media (max-width: 480px) {
+          .responsive-gallery-box {
+            height: 160px !important;
+          }
+          .responsive-card-inner {
+            padding: 14px !important;
+          }
+          .responsive-avatar {
+            width: 70px !important;
+            height: 70px !important;
+          }
+          .responsive-name {
+            font-size: 18px !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
     }
   }, []);
 
@@ -168,13 +201,14 @@ export default function App() {
       color: colors.text,
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      boxSizing: 'border-box'
     }}>
       {/* 1. ヘッダーナビゲーション */}
       <header style={{
         backgroundColor: colors.panelBg,
         borderBottom: `1px solid ${colors.border}`,
-        padding: '12px 24px',
+        padding: '12px 16px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -182,10 +216,10 @@ export default function App() {
         top: 0,
         zIndex: 100
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '20px' }}>📸</span>
-          <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '800', letterSpacing: '-0.3px' }}>
-            FF14 SS Gallery Card Studio
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+          <span style={{ fontSize: '18px', flexShrink: 0 }}>📸</span>
+          <h1 style={{ margin: 0, fontSize: '14px', fontWeight: '800', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            FF14 SS Gallery Card
           </h1>
         </div>
 
@@ -194,24 +228,25 @@ export default function App() {
           backgroundColor: colors.inputBg,
           padding: '3px',
           borderRadius: '20px',
-          border: `1px solid ${colors.border}`
+          border: `1px solid ${colors.border}`,
+          flexShrink: 0
         }}>
           <button
             onClick={() => setSiteTheme('light')}
             style={{
-              padding: '5px 14px',
+              padding: '4px 10px',
               borderRadius: '16px',
               border: 'none',
               backgroundColor: isLight ? colors.panelBg : 'transparent',
               color: isLight ? colors.text : colors.subText,
               cursor: 'pointer',
               fontWeight: '700',
-              fontSize: '12px',
+              fontSize: '11px',
               boxShadow: isLight ? '0 2px 4px rgba(0,0,0,0.08)' : 'none',
               transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '3px'
             }}
           >
             <span>☀️</span> ライト
@@ -219,19 +254,19 @@ export default function App() {
           <button
             onClick={() => setSiteTheme('dark')}
             style={{
-              padding: '5px 14px',
+              padding: '4px 10px',
               borderRadius: '16px',
               border: 'none',
               backgroundColor: !isLight ? colors.panelBg : 'transparent',
               color: !isLight ? colors.text : colors.subText,
               cursor: 'pointer',
               fontWeight: '700',
-              fontSize: '12px',
+              fontSize: '11px',
               boxShadow: !isLight ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
               transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '3px'
             }}
           >
             <span>🌙</span> ダーク
@@ -239,27 +274,29 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. メインレイアウト */}
-      <div style={{
-        flex: 1,
-        maxWidth: '1400px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '24px',
-        boxSizing: 'border-box',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(320px, 380px) 1fr',
-        gap: '24px',
-        alignItems: 'start'
-      }}>
-        {/* 左側: コントロールパネル */}
+      {/* 2. メインレイアウト（スマホ対応クラス app-main-layout） */}
+      <div 
+        className="app-main-layout"
+        style={{
+          flex: 1,
+          maxWidth: '1400px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '16px',
+          boxSizing: 'border-box',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(300px, 360px) 1fr',
+          gap: '20px',
+          alignItems: 'start'
+        }}
+      >
+        {/* 左側（スマホでは下側）: コントロールパネル */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
-          maxHeight: 'calc(100vh - 110px)',
-          overflowY: 'auto',
-          paddingRight: '6px'
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
           <SectionCard title="👤 プロフィール情報" colors={colors}>
             <div>
@@ -379,24 +416,28 @@ export default function App() {
           </SectionCard>
         </div>
 
-        {/* 右側: プレビューエリア */}
-        <div style={{
-          position: 'sticky',
-          top: '75px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '16px',
-          width: '100%',
-          minWidth: 0
-        }}>
+        {/* 右側（スマホでは上側）: プレビューエリア */}
+        <div 
+          className="app-preview-container"
+          style={{
+            position: 'sticky',
+            top: '70px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '14px',
+            width: '100%',
+            minWidth: 0,
+            boxSizing: 'border-box'
+          }}
+        >
           <button
             onClick={handleDownload}
             style={{
               width: '100%',
               maxWidth: '680px',
               padding: '14px',
-              fontSize: '15px',
+              fontSize: '14px',
               fontWeight: '800',
               backgroundColor: colors.accent,
               color: '#ffffff',
@@ -408,7 +449,8 @@ export default function App() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              boxSizing: 'border-box'
             }}
           >
             <span>📥</span> 高画質PNG画像として保存
@@ -421,7 +463,7 @@ export default function App() {
               style={{
                 width: '100%',
                 backgroundColor: activeCardTheme.wrapperBg,
-                padding: '24px',
+                padding: '16px',
                 boxSizing: 'border-box',
                 position: 'relative',
                 borderRadius: '0px',
@@ -429,27 +471,33 @@ export default function App() {
               }}
             >
               {/* 角丸のカード本体に立体的な影を指定！ */}
-              <div style={{
-                backgroundColor: activeCardTheme.bg,
-                borderRadius: '18px',
-                padding: '20px',
-                position: 'relative',
-                boxSizing: 'border-box',
-                transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-                fontFamily: cardFont,
-                boxShadow: activeCardTheme.shadow
-              }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '20px' }}>
-                  <div style={{
-                    width: '90px',
-                    height: '90px',
-                    borderRadius: '50%',
-                    border: `3px solid ${activeCardTheme.bg}`,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                    backgroundColor: activeCardTheme.border,
-                    overflow: 'hidden',
-                    flexShrink: 0
-                  }}>
+              <div 
+                className="responsive-card-inner"
+                style={{
+                  backgroundColor: activeCardTheme.bg,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  position: 'relative',
+                  boxSizing: 'border-box',
+                  transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                  fontFamily: cardFont,
+                  boxShadow: activeCardTheme.shadow
+                }}
+              >
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '18px' }}>
+                  <div 
+                    className="responsive-avatar"
+                    style={{
+                      width: '90px',
+                      height: '90px',
+                      borderRadius: '50%',
+                      border: `3px solid ${activeCardTheme.bg}`,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                      backgroundColor: activeCardTheme.border,
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}
+                  >
                     {avatar.src ? (
                       <img
                         src={avatar.src}
@@ -464,33 +512,36 @@ export default function App() {
                         }}
                       />
                     ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>🐱</div>
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>🐱</div>
                     )}
                   </div>
 
                   {/* プロフィールエリア */}
                   <div style={{ flex: 1, paddingTop: '2px', minWidth: 0 }}>
                     {/* 1行目: キャラ名 + @ID + DC/種族バッジ */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                      <h2 style={{
-                        margin: 0,
-                        fontSize: '22px',
-                        fontWeight: '800',
-                        color: activeCardTheme.text,
-                        lineHeight: '1.2',
-                        fontFamily: 'inherit'
-                      }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                      <h2 
+                        className="responsive-name"
+                        style={{
+                          margin: 0,
+                          fontSize: '20px',
+                          fontWeight: '800',
+                          color: activeCardTheme.text,
+                          lineHeight: '1.2',
+                          fontFamily: 'inherit'
+                        }}
+                      >
                         {name}
                       </h2>
-                      <span style={{ fontSize: '13px', color: activeCardTheme.sub, fontWeight: '600', fontFamily: 'inherit' }}>
+                      <span style={{ fontSize: '12px', color: activeCardTheme.sub, fontWeight: '600', fontFamily: 'inherit' }}>
                         @{twitterId}
                       </span>
                       <span style={{
                         backgroundColor: activeCardTheme.badgeBg,
                         color: activeCardTheme.badgeText,
-                        padding: '2px 8px',
+                        padding: '2px 6px',
                         borderRadius: '6px',
-                        fontSize: '11px',
+                        fontSize: '10.5px',
                         fontWeight: '700',
                         fontFamily: 'inherit'
                       }}>
@@ -501,8 +552,8 @@ export default function App() {
                     {/* 2行目: ひとことBio (左詰め) */}
                     <p style={{
                       margin: 0,
-                      fontSize: '12px',
-                      lineHeight: '1.5',
+                      fontSize: '11.5px',
+                      lineHeight: '1.4',
                       color: activeCardTheme.bio,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'break-word',
@@ -512,19 +563,18 @@ export default function App() {
                       {bio}
                     </p>
                   </div>
-
-                  <div style={{ color: activeCardTheme.sub, fontSize: '18px', fontWeight: 'bold', opacity: 0.5 }}>•••</div>
                 </div>
 
                 {/* SS ギャラリー */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
                   {gallery.map((item, idx) => (
                     <div
                       key={idx}
+                      className="responsive-gallery-box"
                       style={{
                         width: '100%',
-                        height: '280px',
-                        borderRadius: '12px',
+                        height: '240px',
+                        borderRadius: '10px',
                         backgroundColor: activeCardTheme.border,
                         overflow: 'hidden',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
@@ -546,16 +596,16 @@ export default function App() {
                         />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: activeCardTheme.sub, gap: '4px' }}>
-                          <span style={{ fontSize: '20px' }}>📷</span>
-                          <span style={{ fontSize: '11px', fontWeight: '700' }}>SS {idx + 1}</span>
+                          <span style={{ fontSize: '18px' }}>📷</span>
+                          <span style={{ fontSize: '10px', fontWeight: '700' }}>SS {idx + 1}</span>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
 
-                <div style={{ textAlign: 'center', borderTop: `1px solid ${activeCardTheme.border}`, paddingTop: '10px' }}>
-                  <p style={{ margin: 0, fontSize: '9px', color: activeCardTheme.sub, fontFamily: 'inherit' }}>
+                <div style={{ textAlign: 'center', borderTop: `1px solid ${activeCardTheme.border}`, paddingTop: '8px' }}>
+                  <p style={{ margin: 0, fontSize: '8.5px', color: activeCardTheme.sub, fontFamily: 'inherit' }}>
                     Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.
                   </p>
                 </div>
@@ -574,10 +624,10 @@ function SectionCard({ title, children, colors }) {
       backgroundColor: colors.panelBg,
       border: `1px solid ${colors.border}`,
       borderRadius: '14px',
-      padding: '16px',
+      padding: '14px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
     }}>
-      <h3 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '800', letterSpacing: '-0.2px' }}>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '12.5px', fontWeight: '800', letterSpacing: '-0.2px' }}>
         {title}
       </h3>
       {children}
