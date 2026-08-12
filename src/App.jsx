@@ -15,7 +15,6 @@ function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, on
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
-    // 0〜100%の範囲に制限
     const newX = Math.min(100, Math.max(0, e.clientX - startPos.current.x));
     const newY = Math.min(100, Math.max(0, e.clientY - startPos.current.y));
     setX(newX);
@@ -24,7 +23,6 @@ function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, on
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // タッチ操作対応 (スマホ)
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {
       setIsDragging(true);
@@ -52,7 +50,6 @@ function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, on
           枠内をドラッグ（長押しスライド）して切り抜き位置を決めてください。
         </p>
 
-        {/* プレビュー枠 */}
         <div
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -64,7 +61,8 @@ function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, on
           style={{
             width: '100%', height: '280px', borderRadius: '12px', border: '2px dashed #6366f1',
             overflow: 'hidden', position: 'relative', cursor: isDragging ? 'grabbing' : 'grab',
-            backgroundColor: '#0f172a', userSelect: 'none', touchAction: 'none'
+            backgroundColor: '#0f172a', userSelect: 'none', touchAction: 'none',
+            isolation: 'isolate'
           }}
         >
           <img
@@ -80,7 +78,6 @@ function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, on
           />
         </div>
 
-        {/* 拡大コントロール */}
         <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '12px', color: '#cbd5e1' }}>🔍 拡大</span>
           <input
@@ -90,7 +87,6 @@ function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, on
           />
         </div>
 
-        {/* ボタン */}
         <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
           <button
             onClick={() => onSave({ x, y, zoom })}
@@ -114,7 +110,6 @@ export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('profile');
 
-  // プロフィール情報
   const [name, setName] = useState('光の戦士');
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
@@ -160,15 +155,12 @@ export default function App() {
 
   const [avatar, setAvatar] = useState({ src: null, x: 50, y: 50, zoom: 1 });
   const [gallery, setGallery] = useState([
-    { src: null, y: 50, zoom: 1 },
-    { src: null, y: 50, zoom: 1 },
-    { src: null, y: 50, zoom: 1 }
+    { src: null, x: 50, y: 50, zoom: 1 },
+    { src: null, x: 50, y: 50, zoom: 1 },
+    { src: null, x: 50, y: 50, zoom: 1 }
   ]);
 
-  // クロップモーダル用ステート
-  const [activeCrop, setActiveCrop] = useState(null); // { type: 'avatar' | 'gallery', index?: number, src: string, x, y, zoom }
-
-  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [activeCrop, setActiveCrop] = useState(null);
   const cardRef = useRef(null);
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -196,7 +188,6 @@ export default function App() {
           gap: 24px; 
           align-items: start;
         }
-        /* 右側パネルを画面の高さにピン留めし、突き抜けを物理的に防ぐ */
         .panel-area {
           position: sticky;
           top: 70px;
@@ -269,7 +260,6 @@ export default function App() {
     if (file) {
       const compressedUrl = await compressImage(file, 600);
       setAvatar({ src: compressedUrl, x: 50, y: 50, zoom: 1 });
-      // 切り抜きモーダルを開く
       setActiveCrop({ type: 'avatar', src: compressedUrl, x: 50, y: 50, zoom: 1 });
     }
   };
@@ -280,10 +270,9 @@ export default function App() {
       const compressedUrl = await compressImage(file, 1000);
       setGallery((prev) => {
         const next = [...prev];
-        next[index] = { src: compressedUrl, y: 50, zoom: 1 };
+        next[index] = { src: compressedUrl, x: 50, y: 50, zoom: 1 };
         return next;
       });
-      // 切り抜きモーダルを開く
       setActiveCrop({ type: 'gallery', index, src: compressedUrl, x: 50, y: 50, zoom: 1 });
     }
   };
@@ -540,7 +529,6 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
-      {/* トリミング/位置調整モーダル */}
       {activeCrop && (
         <CropModal
           imageSrc={activeCrop.src}
@@ -552,7 +540,6 @@ export default function App() {
         />
       )}
 
-      {/* 完成画像モーダル */}
       {resultImage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -575,7 +562,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ヘッダー */}
       <header style={{ backgroundColor: colors.panelBg, borderBottom: `1px solid ${colors.border}`, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
         <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>📸 FF14 Card Maker</h1>
         <button onClick={() => setSiteTheme(isLight ? 'dark' : 'light')} style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, color: colors.text, cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>
@@ -583,10 +569,8 @@ export default function App() {
         </button>
       </header>
 
-      {/* メインレイアウト */}
       <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
-        {/* 左側: プレビュー */}
         <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <button
             onClick={handleGenerate}
@@ -607,16 +591,24 @@ export default function App() {
                 <div style={{
                   flex: 1, background: activeCardTheme.bg, borderRadius: '40px', padding: '36px 44px',
                   fontFamily: cardFont, border: `1px solid ${activeCardTheme.border}`,
-                  backdropFilter: activeCardTheme.backdropFilter || 'none', display: 'flex', flexDirection: 'column'
+                  backdropFilter: activeCardTheme.backdropFilter || 'none', display: 'flex', flexDirection: 'column',
+                  overflow: 'hidden', isolation: 'isolate'
                 }}>
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                    <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: `8px solid ${activeCardTheme.border}`, backgroundColor: activeCardTheme.border, overflow: 'hidden', flexShrink: 0 }}>
+                    
+                    {/* アイコン枠：はみ出し防止を設定 */}
+                    <div style={{ 
+                      width: '150px', height: '150px', borderRadius: '50%', 
+                      border: `8px solid ${activeCardTheme.border}`, backgroundColor: activeCardTheme.border, 
+                      overflow: 'hidden', flexShrink: 0, isolation: 'isolate', transform: 'translateZ(0)' 
+                    }}>
                       {avatar.src ? (
                         <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px' }}>🐱</div>
                       )}
                     </div>
+
                     <div style={{ flex: 1, paddingTop: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text }}>{name}</h2>
@@ -627,9 +619,13 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* ギャラリー枠：はみ出し防止を設定 */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px' }}>
                     {gallery.map((item, idx) => (
-                      <div key={idx} style={{ borderRadius: '24px', backgroundColor: activeCardTheme.border, overflow: 'hidden', position: 'relative' }}>
+                      <div key={idx} style={{ 
+                        borderRadius: '24px', backgroundColor: activeCardTheme.border, 
+                        overflow: 'hidden', position: 'relative', isolation: 'isolate', transform: 'translateZ(0)' 
+                      }}>
                         {item.src ? (
                           <img src={item.src} alt={`SS ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${item.x}% ${item.y}%`, transform: `scale(${item.zoom})` }} />
                         ) : (
@@ -644,9 +640,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* 右側: パネル（max-height 指定で絶対突き抜けない仕組み） */}
         <div className="panel-area" style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden' }}>
-          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, flexShrink: 0 }}>
             <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>👤 プロフ</TabButton>
             <TabButton active={activeTab === 'images'} onClick={() => setActiveTab('images')} colors={colors}>🖼️ 画像</TabButton>
@@ -654,8 +648,6 @@ export default function App() {
           </div>
 
           <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
-            
-            {/* プロフィール */}
             {activeTab === 'profile' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div><label style={labelStyle(colors)}>名前</label><input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} /></div>
@@ -668,7 +660,6 @@ export default function App() {
               </div>
             )}
 
-            {/* 画像設定 */}
             {activeTab === 'images' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
@@ -717,7 +708,6 @@ export default function App() {
               </div>
             )}
 
-            {/* 見ため */}
             {activeTab === 'style' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
@@ -746,7 +736,6 @@ export default function App() {
                 </div>
               </div>
             )}
-
           </div>
         </div>
 
