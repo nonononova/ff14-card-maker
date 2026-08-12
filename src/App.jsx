@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-// ⭐ html2canvas は使いません
+import { useState, useRef, useEffect } from 'react';
 
 export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
@@ -174,11 +173,248 @@ export default function App() {
     }
   };
 
-  // 前の画像生成処理に戻す（スマホでの保存問題があるが、サイトは開く）
+  // ----------------------------------------------------
+  // ⭐ Canvas 2D API による高品質画像生成 ＆ 保存処理
+  // ----------------------------------------------------
   const handleGenerate = async () => {
-    alert('申し訳ありませんが、サイト復旧のため一時的に画像保存機能を前のバージョンに戻しています。スマホでの保存に問題がある場合は、パソコンでお試しください。');
-    // ... 前の生成ロジックが入る（ここでは省略、復旧を優先）
-    setIsGenerating(false);
+    setIsGenerating(true);
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+
+      const theme = cardThemes[cardThemeKey] || cardThemes.sakura;
+
+      // 角丸描画用ヘルパー (旧環境互換)
+      const drawRoundRect = (x, y, w, h, r) => {
+        if (typeof ctx.roundRect === 'function') {
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, h, r);
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+      };
+
+      // 1. ラッパー背景 (外枠)
+      ctx.fillStyle = theme.wrapperBg;
+      ctx.fillRect(0, 0, 1200, 800);
+
+      // 2. カード内側背景 (角丸 40px)
+      const margin = 40;
+      const cardW = 1200 - margin * 2; // 1120
+      const cardH = 800 - margin * 2;  // 720
+      const cardX = margin;
+      const cardY = margin;
+
+      ctx.fillStyle = theme.bg;
+      drawRoundRect(cardX, cardY, cardW, cardH, 40);
+      ctx.fill();
+
+      // 画像非同期読み込みヘルパー
+      const loadImage = (src) => {
+        return new Promise((resolve) => {
+          if (!src) return resolve(null);
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      };
+
+      const avatarImg = await loadImage(avatar.src);
+      const galleryImgs = await Promise.all(gallery.map((g) => loadImage(g.src)));
+
+      // 3. アイコン画像の描画 (円形)
+      const iconSize = 150;
+      const iconX = cardX + 44;
+      const iconY = cardY + 36;
+      const iconCenterX = iconX + iconSize / 2;
+      const iconCenterY = iconY + iconSize / 2;
+
+      // 外枠リング
+      ctx.beginPath();
+      ctx.arc(iconCenterX, iconCenterY, iconSize / 2 + 8, 0, Math.PI * 2);
+      ctx.fillStyle = theme.wrapperBg;
+      ctx.fill();
+
+      // アイコン画像表示
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(iconCenterX, iconCenterY, iconSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.fillStyle = theme.border;
+      ctx.fillRect(iconX, iconY, iconSize, iconSize);
+
+      if (avatarImg) {
+        const scale = avatar.zoom || 1;
+        const imgW = iconSize * scale;
+        const imgH = (iconSize * (avatarImg.height / avatarImg.width)) * scale;
+        const offsetX = iconX + (iconSize - imgW) * ((avatar.x || 50) / 100);
+        const offsetY = iconY + (iconSize - imgH) * ((avatar.y || 50) / 100);
+        ctx.drawImage(avatarImg, offsetX, offsetY, imgW, imgH);
+      } else {
+        ctx.fillStyle = theme.sub;
+        ctx.font = '60px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🐱', iconCenterX, iconCenterY);
+      }
+      ctx.restore();
+
+      // 4. プロフィールテキスト描画
+      const fontName = cardFont.split(',')[0].replace(/'/g, '').trim();
+      const textStartX = iconX + iconSize + 24;
+      let currentY = iconY + 42;
+
+      // 名前
+      ctx.fillStyle = theme.text;
+      ctx.font = `900 42px ${fontName}, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(name, textStartX, currentY);
+      const nameWidth = ctx.measureText(name).width;
+
+      // ID
+      ctx.fillStyle = theme.sub;
+      ctx.font = `700 24px ${fontName}, sans-serif`;
+      ctx.fillText(`@${twitterId}`, textStartX + nameWidth + 16, currentY);
+      const idWidth = ctx.measureText(`@${twitterId}`).width;
+
+      // バッジ (DC | 種族)
+      const badgeText = `${dc} | ${race}`;
+      ctx.font = `800 18px ${fontName}, sans-serif`;
+      const badgePaddingH = 16;
+      const badgeW = ctx.measureText(badgeText).width + badgePaddingH * 2;
+      const badgeH = 36;
+      const badgeX = textStartX + nameWidth + 16 + idWidth + 16;
+      const badgeY = currentY - 26;
+
+      ctx.fillStyle = theme.badgeBg;
+      drawRoundRect(badgeX, badgeY, badgeW, badgeH, 12);
+      ctx.fill();
+
+      ctx.fillStyle = theme.badgeText;
+      ctx.fillText(badgeText, badgeX + badgePaddingH, badgeY + 24);
+
+      // 三連ドット
+      ctx.fillStyle = theme.sub;
+      ctx.globalAlpha = 0.6;
+      ctx.font = '44px sans-serif';
+      ctx.fillText('•••', cardX + cardW - 80, currentY);
+      ctx.globalAlpha = 1.0;
+
+      // 自己紹介 (bio)
+      ctx.fillStyle = theme.bio;
+      ctx.font = `500 22px ${fontName}, sans-serif`;
+      const bioLines = bio.split('\n');
+      let bioY = currentY + 40;
+      bioLines.forEach((line) => {
+        ctx.fillText(line, textStartX, bioY);
+        bioY += 33;
+      });
+
+      // 5. ギャラリー画像 (3枚)
+      const galY = cardY + 224;
+      const galW = (cardW - 88 - 48) / 3; // 328px
+      const galH = 410;
+
+      for (let i = 0; i < 3; i++) {
+        const gx = cardX + 44 + i * (galW + 24);
+        ctx.save();
+        drawRoundRect(gx, galY, galW, galH, 24);
+        ctx.clip();
+
+        ctx.fillStyle = theme.border;
+        ctx.fillRect(gx, galY, galW, galH);
+
+        const gItem = gallery[i];
+        const gImg = galleryImgs[i];
+
+        if (gImg) {
+          const zoom = gItem.zoom || 1;
+          const imgRatio = gImg.width / gImg.height;
+          const rectRatio = galW / galH;
+          let drawW, drawH;
+          if (imgRatio > rectRatio) {
+            drawH = galH * zoom;
+            drawW = drawH * imgRatio;
+          } else {
+            drawW = galW * zoom;
+            drawH = drawW / imgRatio;
+          }
+          const posX = gx + (galW - drawW) / 2;
+          const posY = galY + (galH - drawH) * ((gItem.y || 50) / 100);
+
+          ctx.drawImage(gImg, posX, posY, drawW, drawH);
+        } else {
+          ctx.fillStyle = theme.sub;
+          ctx.font = '30px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`📷 ${i + 1}`, gx + galW / 2, galY + galH / 2);
+        }
+        ctx.restore();
+      }
+
+      // 6. フッター
+      ctx.fillStyle = theme.sub;
+      ctx.font = `500 15px ${fontName}, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(
+        'Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.',
+        cardX + cardW / 2,
+        cardY + cardH - 24
+      );
+
+      // 7. 画像出力 ＆ スマホ(Web Share API) / ダウンロード対応
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          setIsGenerating(false);
+          alert('画像の生成に失敗しました。');
+          return;
+        }
+
+        const file = new File([blob], 'ff14_card.jpg', { type: 'image/jpeg' });
+
+        // スマホで「写真に保存」ダイアログを直接開く (iOS Safari / Android Chrome)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'FF14 Card',
+              text: 'FF14 Showcase Card',
+            });
+            setIsGenerating(false);
+            return;
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              console.error('Share error:', err);
+            }
+          }
+        }
+
+        // Web Share未対応またはキャンセルの場合はモーダルダイアログで表示
+        const blobUrl = URL.createObjectURL(blob);
+        setResultImage(blobUrl);
+        setIsGenerating(false);
+      }, 'image/jpeg', 0.95);
+
+    } catch (error) {
+      console.error('Card generation failed:', error);
+      alert('画像生成中にエラーが発生しました。');
+      setIsGenerating(false);
+    }
   };
 
   const isLight = siteTheme === 'light';
@@ -197,25 +433,35 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
-      {/* モーダル */}
+      {/* 完成画像モーダル */}
       {resultImage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px'
         }}>
-          <div style={{ backgroundColor: '#fff', padding: '16px', borderRadius: '12px', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '16px', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
             <h3 style={{ color: '#000', margin: '0 0 8px 0' }}>✅ 画像が完成しました！</h3>
-            <p style={{ color: '#e11d48', fontWeight: 'bold', margin: '0 0 16px 0', fontSize: '14px' }}>
-              スマホの方は画像を「長押し」して保存してください。<br/>(PCの方は右クリック保存)
+            <p style={{ color: '#e11d48', fontWeight: 'bold', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>
+              スマホの方は画像を「長押し」して保存してください。<br/>または下のボタンからダウンロードできます。
             </p>
             <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc' }} />
-            <button
-              onClick={() => setResultImage(null)}
-              style={{ marginTop: '16px', padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', width: '100%', cursor: 'pointer' }}
-            >
-              閉じる
-            </button>
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <a
+                href={resultImage}
+                download="ff14_card.jpg"
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: colors.accent, color: 'white', fontWeight: 'bold', textDecoration: 'none', display: 'inline-block' }}
+              >
+                💾 画像をダウンロード
+              </a>
+              <button
+                onClick={() => setResultImage(null)}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                閉じる
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -231,14 +477,14 @@ export default function App() {
       {/* メインエリア */}
       <div className="app-container" style={{ maxWidth: '1800px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
-        {/* 左側: プレビュー（スマホではSticky固定） */}
+        {/* 左側: プレビュー */}
         <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
           
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', MAXWIDTH: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', maxWidth: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
               marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
@@ -283,7 +529,6 @@ export default function App() {
 
                     <div style={{ flex: 1, paddingTop: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        {/* ⭐ 名前にもフォンフォントスタイルをダイレクト適用 */}
                         <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px', fontFamily: cardFont }}>{name}</h2>
                         <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
                         <span style={{
@@ -293,7 +538,6 @@ export default function App() {
                           {dc} | {race}
                         </span>
                       </div>
-                      {/* ⭐ ひとことは完全左詰め（textAlign: left） */}
                       <p style={{ margin: '14px 0 0 0', fontSize: '22px', lineHeight: '1.5', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500', textAlign: 'left', fontFamily: cardFont }}>
                         {bio}
                       </p>
@@ -374,7 +618,6 @@ export default function App() {
                   <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
                 </div>
 
-                {/* ⭐ DC・種族 (崩れ防止版プルダウン) */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div style={{ minWidth: 0 }}>
                     <label style={labelStyle(colors)}>データセンター (DC)</label>
@@ -483,7 +726,7 @@ export default function App() {
   );
 }
 
-// 部品コンポーネント (App.jsxの中に残します)
+// サブコンポーネント
 function TabButton({ active, onClick, children, colors }) {
   return (
     <button
