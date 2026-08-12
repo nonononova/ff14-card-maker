@@ -111,7 +111,7 @@ export default function App() {
     const updateScale = () => {
       if (containerRef.current) {
         const parentWidth = containerRef.current.offsetWidth;
-        const newScale = parentWidth / 1200;
+        const newScale = Math.min(parentWidth / 1200, 1.0);
         setScale(newScale);
       }
     };
@@ -517,7 +517,7 @@ export default function App() {
       </header>
 
       {/* メインエリア */}
-      <div className="app-container" style={{ maxWidth: '100%', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
+      <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
         {/* 左側: プレビュー */}
         <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
