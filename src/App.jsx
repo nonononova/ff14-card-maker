@@ -4,7 +4,7 @@ export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('profile');
 
-  // プロフィール情報
+  // プロフィール情報 (初期値を指定に合わせて更新)
   const [name, setName] = useState('光の戦士');
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
@@ -92,12 +92,12 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
         @media (max-width: 1024px) { 
           .app-container { display: flex; flex-direction: column; } 
           .preview-area {
             position: sticky;
-            top: 60px;
+            top: 54px;
             z-index: 80;
             padding-bottom: 12px;
           }
@@ -178,6 +178,9 @@ export default function App() {
     }
   };
 
+  // ----------------------------------------------------
+  // 並び替え処理 (ドラッグ＆ドロップ + ボタン移動)
+  // ----------------------------------------------------
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -203,6 +206,9 @@ export default function App() {
     setGallery(newGallery);
   };
 
+  // ----------------------------------------------------
+  // Canvas 2D API による画像生成
+  // ----------------------------------------------------
   const handleGenerate = async () => {
     setIsGenerating(true);
 
@@ -230,6 +236,7 @@ export default function App() {
         }
       };
 
+      // 1. 背景
       if (theme.wrapperBg.startsWith('linear-gradient')) {
         const grad = ctx.createLinearGradient(0, 0, 1200, 800);
         if (cardThemeKey === 'glassDark') {
@@ -245,6 +252,7 @@ export default function App() {
       }
       ctx.fillRect(0, 0, 1200, 800);
 
+      // 2. カード枠
       const margin = 40;
       const cardW = 1200 - margin * 2;
       const cardH = 800 - margin * 2;
@@ -269,6 +277,7 @@ export default function App() {
       const avatarImg = await loadImage(avatar.src);
       const galleryImgs = await Promise.all(gallery.map((g) => loadImage(g.src)));
 
+      // 3. アイコン描画
       const iconSize = 150;
       const iconX = cardX + 44;
       const iconY = cardY + 36;
@@ -303,6 +312,7 @@ export default function App() {
       }
       ctx.restore();
 
+      // 4. プロフィールテキスト描画
       const fontName = cardFont.split(',')[0].replace(/'/g, '').trim();
       const textStartX = iconX + iconSize + 24;
       let currentY = iconY + 42;
@@ -349,6 +359,7 @@ export default function App() {
         bioY += 33;
       });
 
+      // 5. ギャラリー画像
       const galY = cardY + 224;
       const galW = (cardW - 88 - 48) / 3;
       const galH = 410;
@@ -391,6 +402,7 @@ export default function App() {
         ctx.restore();
       }
 
+      // 6. フッター
       ctx.fillStyle = theme.sub;
       ctx.font = `500 15px ${fontName}, sans-serif`;
       ctx.textAlign = 'center';
@@ -401,6 +413,7 @@ export default function App() {
         cardY + cardH - 24
       );
 
+      // 7. 画像出力
       canvas.toBlob(async (blob) => {
         if (!blob) {
           setIsGenerating(false);
@@ -449,21 +462,19 @@ export default function App() {
 
   const isLight = siteTheme === 'light';
   const colors = {
-    bg: isLight ? '#f8fafc' : '#090d16',
-    panelBg: isLight ? '#ffffff' : '#111827',
-    cardInnerBg: isLight ? '#f1f5f9' : '#1e293b',
-    border: isLight ? '#e2e8f0' : '#374151',
-    text: isLight ? '#0f172a' : '#f9fafb',
-    subText: isLight ? '#64748b' : '#9ca3af',
-    inputBg: isLight ? '#ffffff' : '#0f172a',
+    bg: isLight ? '#f1f5f9' : '#0f172a',
+    panelBg: isLight ? '#ffffff' : '#1e293b',
+    border: isLight ? '#e2e8f0' : '#334155',
+    text: isLight ? '#0f172a' : '#f8fafc',
+    subText: isLight ? '#64748b' : '#94a3b8',
+    inputBg: isLight ? '#f8fafc' : '#0f172a',
     accent: '#6366f1',
-    accentGradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
   };
 
   const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.glass;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", paddingBottom: '40px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
       {/* モーダル */}
       {resultImage && (
@@ -472,23 +483,23 @@ export default function App() {
           backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px'
         }}>
-          <div style={{ backgroundColor: colors.panelBg, padding: '24px', borderRadius: '20px', textAlign: 'center', maxWidth: '600px', width: '100%', border: `1px solid ${colors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
-            <h3 style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '18px' }}>✨ カードが完成しました！</h3>
-            <p style={{ color: colors.subText, margin: '0 0 16px 0', fontSize: '13px', lineHeight: '1.5' }}>
-              保存してSNSなどで共有しましょう。（スマホは画像を長押しで保存できます）
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '16px', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
+            <h3 style={{ color: '#000', margin: '0 0 8px 0' }}>✅ 画像が完成しました！</h3>
+            <p style={{ color: '#64748b', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>
+              下のボタンから保存できます。（スマホの場合は長押しでも保存可能です）
             </p>
-            <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '12px', border: `1px solid ${colors.border}` }} />
+            <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc' }} />
             
-            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
               <button
                 onClick={() => triggerPCDownload(resultImage)}
-                style={{ flex: 1, padding: '12px', borderRadius: '10px', background: colors.accentGradient, color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer', fontSize: '14px' }}
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: colors.accent, color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
               >
-                💾 画像を保存
+                💾 画像をダウンロード
               </button>
               <button
                 onClick={() => setResultImage(null)}
-                style={{ padding: '12px 24px', borderRadius: '10px', border: `1px solid ${colors.border}`, backgroundColor: colors.cardInnerBg, color: colors.text, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 閉じる
               </button>
@@ -498,37 +509,34 @@ export default function App() {
       )}
 
       {/* ヘッダー */}
-      <header style={{ backgroundColor: colors.panelBg, borderBottom: `1px solid ${colors.border}`, padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(8px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: colors.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>📸</div>
-          <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.02em' }}>FF14 Card Maker</h1>
-        </div>
-        <button onClick={() => setSiteTheme(isLight ? 'dark' : 'light')} style={{ padding: '8px 16px', borderRadius: '20px', border: `1px solid ${colors.border}`, backgroundColor: colors.cardInnerBg, color: colors.text, cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <header style={{ backgroundColor: colors.panelBg, borderBottom: `1px solid ${colors.border}`, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+        <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>📸 FF14 Card Maker</h1>
+        <button onClick={() => setSiteTheme(isLight ? 'dark' : 'light')} style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, color: colors.text, cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>
           {isLight ? '🌙 ダーク' : '☀️ ライト'}
         </button>
       </header>
 
       {/* メインエリア */}
-      <div className="app-container" style={{ maxWidth: '1800px', margin: '0 auto', padding: '24px 20px', boxSizing: 'border-box' }}>
+      <div className="app-container" style={{ maxWidth: '1800px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
         {/* 左側: プレビュー */}
-        <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
           
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
               width: '100%', maxWidth: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
-              background: isGenerating ? '#94a3b8' : colors.accentGradient, color: '#ffffff',
-              border: 'none', borderRadius: '14px', cursor: isGenerating ? 'not-allowed' : 'pointer',
-              marginBottom: '20px', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.25)',
-              transition: 'transform 0.1s ease, box-shadow 0.1s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+              backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
+              border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
+              marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
+              transition: 'all 0.2s ease'
             }}
           >
-            {isGenerating ? '⏳ 生成中...' : '📥 画像を生成して保存'}
+            {isGenerating ? '⏳ 生成中...' : '📥 画像を保存する'}
           </button>
 
-          <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden', borderRadius: '24px' }}>
+          <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
             <div style={{
               width: '1200px', height: '800px',
               transform: `scale(${scale})`, 
@@ -626,10 +634,9 @@ export default function App() {
         </div>
 
         {/* 右側: パネル */}
-        <div style={{ width: '100%', backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
+        <div style={{ width: '100%', backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
           
-          {/* タブヘッダー */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', padding: '8px', backgroundColor: colors.cardInnerBg, borderBottom: `1px solid ${colors.border}` }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg }}>
             <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>
               👤 プロフ
             </TabButton>
@@ -641,75 +648,76 @@ export default function App() {
             </TabButton>
           </div>
 
-          <div style={{ padding: '20px' }}>
+          <div style={{ padding: '16px' }}>
             
             {/* タブ1: プロフィール */}
             {activeTab === 'profile' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <SectionCard title="基本ステータス" colors={colors}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div>
-                      <label style={labelStyle(colors)}>キャラクター名</label>
-                      <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: 光の戦士" />
-                    </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={labelStyle(colors)}>キャラクター名</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: 光の戦士" />
+                </div>
 
-                    <div>
-                      <label style={labelStyle(colors)}>X (Twitter) ID</label>
-                      <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: hika_sen" />
-                    </div>
+                <div>
+                  <label style={labelStyle(colors)}>X (Twitter) ID</label>
+                  <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: hika_sen" />
+                </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <div style={{ minWidth: 0 }}>
-                        <label style={labelStyle(colors)}>データセンター</label>
-                        <select value={dc} onChange={(e) => setDc(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-                          {dcOptions.map((item) => (
-                            <option key={item} value={item}>{item}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div style={{ minWidth: 0 }}>
-                        <label style={labelStyle(colors)}>種族</label>
-                        <select value={race} onChange={(e) => setRace(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-                          {raceOptions.map((item) => (
-                            <option key={item} value={item}>{item}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <label style={labelStyle(colors)}>データセンター (DC)</label>
+                    <select value={dc} onChange={(e) => setDc(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
+                      {dcOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
                   </div>
-                </SectionCard>
 
-                <SectionCard title="自己紹介" colors={colors}>
-                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} style={{ ...inputStyle(colors), resize: 'vertical' }} placeholder="自己紹介テキスト" />
-                </SectionCard>
+                  <div style={{ minWidth: 0 }}>
+                    <label style={labelStyle(colors)}>種族</label>
+                    <select value={race} onChange={(e) => setRace(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
+                      {raceOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle(colors)}>自己紹介・ひとこと</label>
+                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} style={inputStyle(colors)} placeholder="自己紹介テキスト" />
+                </div>
               </div>
             )}
 
-            {/* タブ2: 画像設定 */}
+            {/* タブ2: 画像設定 (並び替えボタン＆改善スライダー) */}
             {activeTab === 'images' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <SectionCard title="👤 アイコン画像" colors={colors}>
-                  <FileUploadButton label="📁 画像を変更する" onFileSelect={handleAvatarUpload} colors={colors} fullWidth />
+                <div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.text }}>👤 アイコン画像</h4>
+                  <FileUploadButton label="📁 画像を変更" onFileSelect={handleAvatarUpload} colors={colors} />
                   {avatar.src && (
-                    <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <Slider label="左右" value={avatar.x} step={1} onChange={(v) => setAvatar({ ...avatar, x: v })} colors={colors} />
                       <Slider label="上下" value={avatar.y} step={1} onChange={(v) => setAvatar({ ...avatar, y: v })} colors={colors} />
                       <Slider label="拡大" value={avatar.zoom} min={1} max={2} step={0.05} onChange={(v) => setAvatar({ ...avatar, zoom: v })} colors={colors} />
                     </div>
                   )}
-                </SectionCard>
+                </div>
 
-                <SectionCard title="📷 ギャラリー画像 (3枚)" colors={colors}>
-                  <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: colors.subText, lineHeight: '1.4' }}>
-                    💡 PC: ドラッグ＆ドロップ / スマホ: 「▲」「▼」ボタンで並び替え
+                <hr style={{ border: 'none', borderTop: `1px solid ${colors.border}`, margin: 0 }} />
+
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', color: colors.text }}>📷 ギャラリー画像 (3枚)</h4>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: colors.subText }}>
+                    💡 PC: ドラッグ＆ドロップ / スマホ: 「▲」「▼」で並び替え
                   </p>
                   
                   <label style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
-                    background: colors.accentGradient, borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#ffffff', marginBottom: '16px'
+                    backgroundColor: colors.accent, borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#ffffff', marginBottom: '16px'
                   }}>
-                    📁 3枚まとめて一括登録
+                    📁 3枚まとめて読み込む
                     <input type="file" accept="image/*" multiple onChange={handleBatchGalleryUpload} style={{ display: 'none' }} />
                   </label>
 
@@ -721,15 +729,15 @@ export default function App() {
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, idx)}
                       style={{
-                        marginBottom: '12px', padding: '12px', borderRadius: '10px',
+                        marginBottom: '14px', padding: '10px', borderRadius: '8px',
                         border: `1px solid ${colors.border}`,
-                        backgroundColor: draggedIndex === idx ? colors.cardInnerBg : colors.inputBg,
+                        backgroundColor: draggedIndex === idx ? colors.inputBg : 'transparent',
                         cursor: 'grab',
-                        transition: 'all 0.2s ease'
+                        transition: 'background-color 0.2s ease'
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: item.src ? '8px' : '0' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.text, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText, display: 'flex', alignItems: 'center', gap: '6px' }}>
                           ⋮⋮ SS {idx + 1} {item.src && '✅'}
                         </span>
                         
@@ -752,35 +760,37 @@ export default function App() {
                           >
                             ▼
                           </button>
-                          <FileUploadButton label="変更" onFileSelect={handleGalleryUpload(idx)} colors={colors} />
+                          <FileUploadButton label="📁 変更" onFileSelect={handleGalleryUpload(idx)} colors={colors} />
                         </div>
                       </div>
 
                       {item.src && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${colors.border}` }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <Slider label="上下" value={item.y} step={1} onChange={(v) => { const n = [...gallery]; n[idx].y = v; setGallery(n); }} colors={colors} />
                           <Slider label="拡大" value={item.zoom} min={1} max={2} step={0.05} onChange={(v) => { const n = [...gallery]; n[idx].zoom = v; setGallery(n); }} colors={colors} />
                         </div>
                       )}
                     </div>
                   ))}
-                </SectionCard>
+                </div>
               </div>
             )}
 
             {/* タブ3: 見ため */}
             {activeTab === 'style' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <SectionCard title="🔤 フォントスタイル" colors={colors}>
+                <div>
+                  <label style={labelStyle(colors)}>フォントスタイル</label>
                   <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
                     {fontOptions.map((f) => (
                       <option key={f.value} value={f.value}>{f.label}</option>
                     ))}
                   </select>
-                </SectionCard>
+                </div>
 
-                <SectionCard title="🎨 カラーテーマ" colors={colors}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', maxHeight: '360px', overflowY: 'auto', paddingRight: '4px' }}>
+                <div>
+                  <label style={labelStyle(colors)}>カラーテーマ</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '320px', overflowY: 'auto', paddingRight: '4px' }}>
                     {Object.keys(cardThemes).map((key) => {
                       const t = cardThemes[key];
                       const isSelected = cardThemeKey === key;
@@ -789,29 +799,19 @@ export default function App() {
                           key={key}
                           onClick={() => setCardThemeKey(key)}
                           style={{
-                            padding: '10px 12px', borderRadius: '10px',
+                            padding: '10px', borderRadius: '8px',
                             border: isSelected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                            background: colors.inputBg,
-                            cursor: 'pointer', textAlign: 'left',
-                            boxShadow: isSelected ? '0 0 12px rgba(99, 102, 241, 0.25)' : 'none',
-                            display: 'flex', flexDirection: 'column', gap: '6px',
-                            transition: 'all 0.15s ease'
+                            background: t.bg, color: t.text, fontWeight: 'bold', fontSize: '12px',
+                            cursor: 'pointer', textAlign: 'center',
+                            boxShadow: isSelected ? '0 0 8px rgba(99, 102, 241, 0.4)' : 'none'
                           }}
                         >
-                          {/* カラーテーマのミニスウォッチ */}
-                          <div style={{ display: 'flex', height: '12px', borderRadius: '6px', overflow: 'hidden', border: `1px solid ${t.border}` }}>
-                            <div style={{ flex: 1, background: t.wrapperBg }} />
-                            <div style={{ flex: 1, background: t.bg }} />
-                            <div style={{ flex: 1, background: t.text }} />
-                          </div>
-                          <span style={{ fontWeight: isSelected ? 'bold' : '600', fontSize: '11px', color: colors.text }}>
-                            {t.name}
-                          </span>
+                          {t.name}
                         </button>
                       );
                     })}
                   </div>
-                </SectionCard>
+                </div>
               </div>
             )}
 
@@ -826,35 +826,16 @@ export default function App() {
 // ----------------------------------------------------
 // 補助UIコンポーネント & スタイル定義
 // ----------------------------------------------------
-function SectionCard({ title, children, colors }) {
-  return (
-    <div style={{
-      backgroundColor: colors.cardInnerBg,
-      borderRadius: '12px',
-      border: `1px solid ${colors.border}`,
-      padding: '14px',
-    }}>
-      <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '800', color: colors.subText, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-        {title}
-      </h4>
-      {children}
-    </div>
-  );
-}
-
 function TabButton({ active, onClick, children, colors }) {
   return (
     <button
       onClick={onClick}
       style={{
-        padding: '10px', border: 'none',
-        borderRadius: '8px',
+        padding: '12px 6px', border: 'none',
         backgroundColor: active ? colors.panelBg : 'transparent',
-        color: active ? colors.text : colors.subText,
+        color: active ? colors.accent : colors.subText,
         fontWeight: active ? 'bold' : 'normal',
-        cursor: 'pointer', fontSize: '12px',
-        boxShadow: active ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
-        transition: 'all 0.15s ease'
+        cursor: 'pointer', fontSize: '13px', borderBottom: active ? `2px solid ${colors.accent}` : 'none'
       }}
     >
       {children}
@@ -862,15 +843,12 @@ function TabButton({ active, onClick, children, colors }) {
   );
 }
 
-function FileUploadButton({ label, onFileSelect, colors, fullWidth }) {
+function FileUploadButton({ label, onFileSelect, colors }) {
   return (
     <label style={{
-      display: fullWidth ? 'flex' : 'inline-block',
-      alignItems: 'center', justifyContent: 'center',
-      padding: '8px 12px', backgroundColor: colors.inputBg,
-      border: `1px solid ${colors.border}`, borderRadius: '8px', cursor: 'pointer',
-      fontSize: '11px', fontWeight: 'bold', color: colors.text,
-      transition: 'background-color 0.15s ease'
+      display: 'inline-block', padding: '6px 12px', backgroundColor: colors.inputBg,
+      border: `1px solid ${colors.border}`, borderRadius: '6px', cursor: 'pointer',
+      fontSize: '11px', fontWeight: 'bold', color: colors.text
     }}>
       {label}
       <input type="file" accept="image/*" onChange={onFileSelect} style={{ display: 'none' }} />
@@ -878,6 +856,7 @@ function FileUploadButton({ label, onFileSelect, colors, fullWidth }) {
   );
 }
 
+// 指やタップで押しやすいように「＋/ー」ボタンと高さを設けたスライダー
 function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }) {
   const handleStep = (delta) => {
     const nextVal = Math.min(max, Math.max(min, Math.round((value + delta) * 100) / 100));
@@ -885,14 +864,14 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0' }}>
       <span style={{ fontSize: '11px', color: colors.subText, width: '28px', fontWeight: 'bold' }}>{label}</span>
       <button
         type="button"
         onClick={() => handleStep(-step)}
         style={{
-          width: '28px', height: '28px', borderRadius: '6px', border: `1px solid ${colors.border}`,
-          backgroundColor: colors.inputBg, color: colors.text, fontSize: '13px', fontWeight: 'bold',
+          width: '32px', height: '32px', borderRadius: '6px', border: `1px solid ${colors.border}`,
+          backgroundColor: colors.inputBg, color: colors.text, fontSize: '14px', fontWeight: 'bold',
           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation'
         }}
       >
@@ -902,15 +881,15 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         style={{
-          flex: 1, accentColor: colors.accent, height: '24px', cursor: 'pointer', touchAction: 'none'
+          flex: 1, accentColor: colors.accent, height: '28px', cursor: 'pointer', touchAction: 'none'
         }}
       />
       <button
         type="button"
         onClick={() => handleStep(step)}
         style={{
-          width: '28px', height: '28px', borderRadius: '6px', border: `1px solid ${colors.border}`,
-          backgroundColor: colors.inputBg, color: colors.text, fontSize: '13px', fontWeight: 'bold',
+          width: '32px', height: '32px', borderRadius: '6px', border: `1px solid ${colors.border}`,
+          backgroundColor: colors.inputBg, color: colors.text, fontSize: '14px', fontWeight: 'bold',
           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation'
         }}
       >
@@ -921,7 +900,7 @@ function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }
 }
 
 const arrowButtonStyle = (colors, disabled) => ({
-  padding: '4px 8px',
+  padding: '6px 10px',
   borderRadius: '6px',
   border: `1px solid ${colors.border}`,
   backgroundColor: colors.inputBg,
@@ -933,11 +912,10 @@ const arrowButtonStyle = (colors, disabled) => ({
 });
 
 const labelStyle = (colors) => ({
-  display: 'block', fontSize: '11px', fontWeight: 'bold', color: colors.subText, marginBottom: '4px'
+  display: 'block', fontSize: '12px', fontWeight: 'bold', color: colors.subText, marginBottom: '6px'
 });
 
 const inputStyle = (colors) => ({
-  width: '100%', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`,
-  backgroundColor: colors.inputBg, color: colors.text, fontSize: '13px', boxSizing: 'border-box',
-  outline: 'none'
+  width: '100%', padding: '10px', borderRadius: '8px', border: `1px solid ${colors.border}`,
+  backgroundColor: colors.inputBg, color: colors.text, fontSize: '13px', boxSizing: 'border-box'
 });
