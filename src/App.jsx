@@ -1,29 +1,129 @@
 import { useState, useRef, useEffect } from 'react';
 
+// --- 画像調整用モーダルコンポーネント ---
+function CropModal({ imageSrc, initialX = 50, initialY = 50, initialZoom = 1, onSave, onClose }) {
+  const [x, setX] = useState(initialX);
+  const [y, setY] = useState(initialY);
+  const [zoom, setZoom] = useState(initialZoom);
+  const [isDragging, setIsDragging] = useState(false);
+  const startPos = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    startPos.current = { x: e.clientX - x, y: e.clientY - y };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    // 0〜100%の範囲に制限
+    const newX = Math.min(100, Math.max(0, e.clientX - startPos.current.x));
+    const newY = Math.min(100, Math.max(0, e.clientY - startPos.current.y));
+    setX(newX);
+    setY(newY);
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  // タッチ操作対応 (スマホ)
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      startPos.current = { x: e.touches[0].clientX - x, y: e.touches[0].clientY - y };
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    const newX = Math.min(100, Math.max(0, e.touches[0].clientX - startPos.current.x));
+    const newY = Math.min(100, Math.max(0, e.touches[0].clientY - startPos.current.y));
+    setX(newX);
+    setY(newY);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 10000,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px'
+    }}>
+      <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '16px', maxWidth: '500px', width: '100%', color: '#fff' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>✋ 画像をドラッグして位置を調整</h3>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94a3b8' }}>
+          枠内をドラッグ（長押しスライド）して切り抜き位置を決めてください。
+        </p>
+
+        {/* プレビュー枠 */}
+        <div
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
+          style={{
+            width: '100%', height: '280px', borderRadius: '12px', border: '2px dashed #6366f1',
+            overflow: 'hidden', position: 'relative', cursor: isDragging ? 'grabbing' : 'grab',
+            backgroundColor: '#0f172a', userSelect: 'none', touchAction: 'none'
+          }}
+        >
+          <img
+            src={imageSrc}
+            alt="Crop target"
+            draggable={false}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              objectPosition: `${x}% ${y}%`,
+              transform: `scale(${zoom})`,
+              pointerEvents: 'none'
+            }}
+          />
+        </div>
+
+        {/* 拡大コントロール */}
+        <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>🔍 拡大</span>
+          <input
+            type="range" min="1" max="2.5" step="0.05" value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            style={{ flex: 1, accentColor: '#6366f1' }}
+          />
+        </div>
+
+        {/* ボタン */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+          <button
+            onClick={() => onSave({ x, y, zoom })}
+            style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#6366f1', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            決定する
+          </button>
+          <button
+            onClick={onClose}
+            style={{ padding: '12px 20px', borderRadius: '8px', backgroundColor: '#334155', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            キャンセル
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('profile');
 
-  // プロフィール情報 (初期値を指定に合わせて更新)
+  // プロフィール情報
   const [name, setName] = useState('光の戦士');
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
   const [twitterId, setTwitterId] = useState('hika_sen');
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
 
-  // DC & 種族の選択肢
-  const dcOptions = [
-    'Mana', 'Elemental', 'Gaia', 'Meteor', 
-    'Aether', 'Primal', 'Crystal', 'Dynamis', 
-    'Light', 'Chaos', 'Materia'
-  ];
+  const dcOptions = ['Mana', 'Elemental', 'Gaia', 'Meteor', 'Aether', 'Primal', 'Crystal', 'Dynamis', 'Light', 'Chaos', 'Materia'];
+  const raceOptions = ["Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'];
 
-  const raceOptions = [
-    "Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 
-    'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'
-  ];
-
-  // フォント選択肢
   const fontOptions = [
     { label: '丸ゴシック (Zen Maru)', value: "'Zen Maru Gothic', sans-serif" },
     { label: 'ぽっちゃり丸フォント (M PLUS Rounded 1c)', value: "'M PLUS Rounded 1c', sans-serif" },
@@ -36,7 +136,6 @@ export default function App() {
   ];
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
-  // カラーテーマ
   const cardThemes = {
     glass: { name: 'クリスタル(透明感)', bg: 'rgba(255, 255, 255, 0.45)', wrapperBg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', text: '#0f172a', sub: '#475569', bio: '#1e293b', border: 'rgba(255, 255, 255, 0.6)', badgeBg: 'rgba(255, 255, 255, 0.6)', badgeText: '#0369a1', shadow: '0 20px 50px rgba(31, 38, 135, 0.15)', backdropFilter: 'blur(16px)' },
     glassDark: { name: 'ダークガラス(透明感)', bg: 'rgba(15, 23, 42, 0.55)', wrapperBg: 'linear-gradient(135deg, #0f172a 0%, #2e1065 100%)', text: '#f8fafc', sub: '#cbd5e1', bio: '#e2e8f0', border: 'rgba(255, 255, 255, 0.15)', badgeBg: 'rgba(255, 255, 255, 0.15)', badgeText: '#38bdf8', shadow: '0 25px 50px rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(16px)' },
@@ -59,7 +158,6 @@ export default function App() {
   };
   const [cardThemeKey, setCardThemeKey] = useState('glass');
 
-  // アイコン画像 ＆ ギャラリー画像
   const [avatar, setAvatar] = useState({ src: null, x: 50, y: 50, zoom: 1 });
   const [gallery, setGallery] = useState([
     { src: null, y: 50, zoom: 1 },
@@ -67,12 +165,12 @@ export default function App() {
     { src: null, y: 50, zoom: 1 }
   ]);
 
-  // ドラッグ＆ドロップ管理State
-  const [draggedIndex, setDraggedIndex] = useState(null);
+  // クロップモーダル用ステート
+  const [activeCrop, setActiveCrop] = useState(null); // { type: 'avatar' | 'gallery', index?: number, src: string, x, y, zoom }
 
+  const [draggedIndex, setDraggedIndex] = useState(null);
   const cardRef = useRef(null);
   const containerRef = useRef(null);
-  
   const [scale, setScale] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState(null);
@@ -92,14 +190,34 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .app-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+        .app-container { 
+          display: grid; 
+          grid-template-columns: minmax(0, 1fr) 380px; 
+          gap: 24px; 
+          align-items: start;
+        }
+        /* 右側パネルを画面の高さにピン留めし、突き抜けを物理的に防ぐ */
+        .panel-area {
+          position: sticky;
+          top: 70px;
+          max-height: calc(100vh - 90px);
+          display: flex;
+          flex-direction: column;
+        }
         @media (max-width: 1024px) { 
-          .app-container { display: flex; flex-direction: column; } 
+          .app-container { 
+            display: flex; 
+            flex-direction: column; 
+          } 
           .preview-area {
             position: sticky;
             top: 54px;
             z-index: 80;
             padding-bottom: 12px;
+          }
+          .panel-area {
+            position: static;
+            max-height: 500px !important;
           }
         }
       `;
@@ -150,20 +268,10 @@ export default function App() {
     const file = e.target.files[0];
     if (file) {
       const compressedUrl = await compressImage(file, 600);
-      setAvatar((prev) => ({ ...prev, src: compressedUrl }));
+      setAvatar({ src: compressedUrl, x: 50, y: 50, zoom: 1 });
+      // 切り抜きモーダルを開く
+      setActiveCrop({ type: 'avatar', src: compressedUrl, x: 50, y: 50, zoom: 1 });
     }
-  };
-
-  const handleBatchGalleryUpload = async (e) => {
-    const files = Array.from(e.target.files).slice(0, 3);
-    if (files.length === 0) return;
-
-    const newGallery = [...gallery];
-    for (let i = 0; i < files.length; i++) {
-      const compressedUrl = await compressImage(files[i], 1000);
-      newGallery[i] = { ...newGallery[i], src: compressedUrl };
-    }
-    setGallery(newGallery);
   };
 
   const handleGalleryUpload = (index) => async (e) => {
@@ -172,30 +280,25 @@ export default function App() {
       const compressedUrl = await compressImage(file, 1000);
       setGallery((prev) => {
         const next = [...prev];
-        next[index] = { ...next[index], src: compressedUrl };
+        next[index] = { src: compressedUrl, y: 50, zoom: 1 };
         return next;
       });
+      // 切り抜きモーダルを開く
+      setActiveCrop({ type: 'gallery', index, src: compressedUrl, x: 50, y: 50, zoom: 1 });
     }
   };
 
-  // ----------------------------------------------------
-  // 並び替え処理 (ドラッグ＆ドロップ + ボタン移動)
-  // ----------------------------------------------------
-  const handleDragStart = (e, index) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e, targetIndex) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === targetIndex) return;
-    moveGalleryItem(draggedIndex, targetIndex);
-    setDraggedIndex(null);
+  const handleSaveCrop = (cropData) => {
+    if (activeCrop.type === 'avatar') {
+      setAvatar((prev) => ({ ...prev, ...cropData }));
+    } else if (activeCrop.type === 'gallery') {
+      setGallery((prev) => {
+        const next = [...prev];
+        next[activeCrop.index] = { ...next[activeCrop.index], ...cropData };
+        return next;
+      });
+    }
+    setActiveCrop(null);
   };
 
   const moveGalleryItem = (fromIndex, toIndex) => {
@@ -206,12 +309,8 @@ export default function App() {
     setGallery(newGallery);
   };
 
-  // ----------------------------------------------------
-  // Canvas 2D API による画像生成
-  // ----------------------------------------------------
   const handleGenerate = async () => {
     setIsGenerating(true);
-
     try {
       const canvas = document.createElement('canvas');
       canvas.width = 1200;
@@ -236,7 +335,6 @@ export default function App() {
         }
       };
 
-      // 1. 背景
       if (theme.wrapperBg.startsWith('linear-gradient')) {
         const grad = ctx.createLinearGradient(0, 0, 1200, 800);
         if (cardThemeKey === 'glassDark') {
@@ -252,7 +350,6 @@ export default function App() {
       }
       ctx.fillRect(0, 0, 1200, 800);
 
-      // 2. カード枠
       const margin = 40;
       const cardW = 1200 - margin * 2;
       const cardH = 800 - margin * 2;
@@ -277,7 +374,6 @@ export default function App() {
       const avatarImg = await loadImage(avatar.src);
       const galleryImgs = await Promise.all(gallery.map((g) => loadImage(g.src)));
 
-      // 3. アイコン描画
       const iconSize = 150;
       const iconX = cardX + 44;
       const iconY = cardY + 36;
@@ -312,7 +408,6 @@ export default function App() {
       }
       ctx.restore();
 
-      // 4. プロフィールテキスト描画
       const fontName = cardFont.split(',')[0].replace(/'/g, '').trim();
       const textStartX = iconX + iconSize + 24;
       let currentY = iconY + 42;
@@ -359,7 +454,6 @@ export default function App() {
         bioY += 33;
       });
 
-      // 5. ギャラリー画像
       const galY = cardY + 224;
       const galW = (cardW - 88 - 48) / 3;
       const galH = 410;
@@ -388,7 +482,7 @@ export default function App() {
             drawW = galW * zoom;
             drawH = drawW / imgRatio;
           }
-          const posX = gx + (galW - drawW) / 2;
+          const posX = gx + (galW - drawW) * ((gItem.x || 50) / 100);
           const posY = galY + (galH - drawH) * ((gItem.y || 50) / 100);
 
           ctx.drawImage(gImg, posX, posY, drawW, drawH);
@@ -402,7 +496,6 @@ export default function App() {
         ctx.restore();
       }
 
-      // 6. フッター
       ctx.fillStyle = theme.sub;
       ctx.font = `500 15px ${fontName}, sans-serif`;
       ctx.textAlign = 'center';
@@ -413,32 +506,12 @@ export default function App() {
         cardY + cardH - 24
       );
 
-      // 7. 画像出力
-      canvas.toBlob(async (blob) => {
+      canvas.toBlob((blob) => {
         if (!blob) {
           setIsGenerating(false);
           alert('画像の生成に失敗しました。');
           return;
         }
-
-        const file = new File([blob], 'ff14_card.jpg', { type: 'image/jpeg' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: 'FF14 Card',
-              text: 'FF14 Showcase Card',
-            });
-            setIsGenerating(false);
-            return;
-          } catch (err) {
-            if (err.name !== 'AbortError') {
-              console.error('Share error:', err);
-            }
-          }
-        }
-
         const blobUrl = URL.createObjectURL(blob);
         setResultImage(blobUrl);
         setIsGenerating(false);
@@ -449,15 +522,6 @@ export default function App() {
       alert('画像生成中にエラーが発生しました。');
       setIsGenerating(false);
     }
-  };
-
-  const triggerPCDownload = (url) => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'ff14_card.jpg';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
   const isLight = siteTheme === 'light';
@@ -476,7 +540,19 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
-      {/* モーダル */}
+      {/* トリミング/位置調整モーダル */}
+      {activeCrop && (
+        <CropModal
+          imageSrc={activeCrop.src}
+          initialX={activeCrop.x}
+          initialY={activeCrop.y}
+          initialZoom={activeCrop.zoom}
+          onSave={handleSaveCrop}
+          onClose={() => setActiveCrop(null)}
+        />
+      )}
+
+      {/* 完成画像モーダル */}
       {resultImage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -485,22 +561,13 @@ export default function App() {
         }}>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '16px', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
             <h3 style={{ color: '#000', margin: '0 0 8px 0' }}>✅ 画像が完成しました！</h3>
-            <p style={{ color: '#64748b', margin: '0 0 16px 0', fontSize: '14px', lineHeight: '1.5' }}>
-              下のボタンから保存できます。（スマホの場合は長押しでも保存可能です）
-            </p>
+            <p style={{ color: '#64748b', margin: '0 0 16px 0', fontSize: '14px' }}>長押しまたは下のボタンで保存できます。</p>
             <img src={resultImage} alt="Completed Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #ccc' }} />
-            
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-              <button
-                onClick={() => triggerPCDownload(resultImage)}
-                style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: colors.accent, color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
-              >
-                💾 画像をダウンロード
-              </button>
-              <button
-                onClick={() => setResultImage(null)}
-                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
-              >
+              <a href={resultImage} download="ff14_card.jpg" style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: colors.accent, color: 'white', fontWeight: 'bold', textDecoration: 'none' }}>
+                💾 保存する
+              </a>
+              <button onClick={() => setResultImage(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#334155', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
                 閉じる
               </button>
             </div>
@@ -516,258 +583,132 @@ export default function App() {
         </button>
       </header>
 
-      {/* メインエリア */}
+      {/* メインレイアウト */}
       <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
         {/* 左側: プレビュー */}
-        <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
-          
+        <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', maxWidth: '100%', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
-              marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
-              transition: 'all 0.2s ease'
+              marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)', height: '48px'
             }}
           >
             {isGenerating ? '⏳ 生成中...' : '📥 画像を保存する'}
           </button>
 
           <div ref={containerRef} style={{ width: '100%', display: 'flex', justifyContent: 'center', height: `${800 * scale}px`, overflow: 'hidden' }}>
-            <div style={{
-              width: '1200px', height: '800px',
-              transform: `scale(${scale})`, 
-              transformOrigin: 'top center',
-            }}>
-              
-              {/* カード本体 */}
-              <div ref={cardRef} style={{
-                width: '1200px', height: '800px', background: activeCardTheme.wrapperBg,
-                padding: '40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column'
-              }}>
+            <div style={{ width: '1200px', height: '800px', transform: `scale(${scale})`, transformOrigin: 'top center' }}>
+              <div ref={cardRef} style={{ width: '1200px', height: '800px', background: activeCardTheme.wrapperBg, padding: '40px', boxSizing: 'border-box', display: 'flex' }}>
                 <div style={{
-                  flex: 1, background: activeCardTheme.bg, borderRadius: '40px',
-                  padding: '36px 44px', boxSizing: 'border-box', fontFamily: cardFont,
-                  border: `1px solid ${activeCardTheme.border}`,
-                  backdropFilter: activeCardTheme.backdropFilter || 'none',
-                  WebkitBackdropFilter: activeCardTheme.backdropFilter || 'none',
-                  boxShadow: activeCardTheme.shadow, display: 'flex', flexDirection: 'column',
-                  overflow: 'hidden'
+                  flex: 1, background: activeCardTheme.bg, borderRadius: '40px', padding: '36px 44px',
+                  fontFamily: cardFont, border: `1px solid ${activeCardTheme.border}`,
+                  backdropFilter: activeCardTheme.backdropFilter || 'none', display: 'flex', flexDirection: 'column'
                 }}>
-                  
-                  {/* ヘッダー */}
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                    <div style={{
-                      width: '150px', height: '150px', borderRadius: '50%',
-                      border: `8px solid ${activeCardTheme.border}`, backgroundColor: activeCardTheme.border,
-                      overflow: 'hidden', flexShrink: 0
-                    }}>
+                    <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: `8px solid ${activeCardTheme.border}`, backgroundColor: activeCardTheme.border, overflow: 'hidden', flexShrink: 0 }}>
                       {avatar.src ? (
                         <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px' }}>🐱</div>
                       )}
                     </div>
-
                     <div style={{ flex: 1, paddingTop: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text, letterSpacing: '1px', fontFamily: cardFont }}>{name}</h2>
+                        <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text }}>{name}</h2>
                         <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
-                        <span style={{
-                          backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText,
-                          padding: '8px 16px', borderRadius: '12px', fontSize: '18px', fontWeight: '800',
-                          border: `1px solid ${activeCardTheme.border}`
-                        }}>
-                          {dc} | {race}
-                        </span>
+                        <span style={{ backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText, padding: '8px 16px', borderRadius: '12px', fontSize: '18px', fontWeight: '800' }}>{dc} | {race}</span>
                       </div>
-                      <p style={{ margin: '14px 0 0 0', fontSize: '22px', lineHeight: '1.5', color: activeCardTheme.bio, whiteSpace: 'pre-wrap', fontWeight: '500', textAlign: 'left', fontFamily: cardFont }}>
-                        {bio}
-                      </p>
-                    </div>
-
-                    <div style={{ fontSize: '44px', color: activeCardTheme.sub, letterSpacing: '2px', lineHeight: '1', paddingTop: '6px', opacity: 0.6 }}>
-                      •••
+                      <p style={{ margin: '14px 0 0 0', fontSize: '22px', color: activeCardTheme.bio, whiteSpace: 'pre-wrap' }}>{bio}</p>
                     </div>
                   </div>
 
-                  {/* ギャラリー */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px', minHeight: 0 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px' }}>
                     {gallery.map((item, idx) => (
-                      <div key={idx} style={{
-                        width: '100%', height: '100%', borderRadius: '24px', backgroundColor: activeCardTheme.border,
-                        border: `1px solid ${activeCardTheme.border}`,
-                        overflow: 'hidden', position: 'relative', isolation: 'isolate', transform: 'translateZ(0)'
-                      }}>
+                      <div key={idx} style={{ borderRadius: '24px', backgroundColor: activeCardTheme.border, overflow: 'hidden', position: 'relative' }}>
                         {item.src ? (
-                          <img
-                            src={item.src}
-                            alt={`SS ${idx+1}`}
-                            style={{
-                              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                              objectFit: 'cover', objectPosition: `50% ${item.y}%`,
-                              transform: `scale(${item.zoom})`, transformOrigin: `50% ${item.y}%`
-                            }}
-                          />
+                          <img src={item.src} alt={`SS ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${item.x}% ${item.y}%`, transform: `scale(${item.zoom})` }} />
                         ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeCardTheme.sub, fontSize: '30px' }}>📷 {idx + 1}</div>
                         )}
                       </div>
                     ))}
                   </div>
-
-                  {/* フッター */}
-                  <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                    <span style={{ fontSize: '15px', color: activeCardTheme.sub, fontWeight: '500' }}>
-                      Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.
-                    </span>
-                  </div>
-
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
-        {/* 右側: パネル */}
-        <div style={{ width: '100%', backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
+        {/* 右側: パネル（max-height 指定で絶対突き抜けない仕組み） */}
+        <div className="panel-area" style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden' }}>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg }}>
-            <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>
-              👤 プロフ
-            </TabButton>
-            <TabButton active={activeTab === 'images'} onClick={() => setActiveTab('images')} colors={colors}>
-              🖼️ 画像
-            </TabButton>
-            <TabButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} colors={colors}>
-              🎨 見ため
-            </TabButton>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, flexShrink: 0 }}>
+            <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>👤 プロフ</TabButton>
+            <TabButton active={activeTab === 'images'} onClick={() => setActiveTab('images')} colors={colors}>🖼️ 画像</TabButton>
+            <TabButton active={activeTab === 'style'} onClick={() => setActiveTab('style')} colors={colors}>🎨 見ため</TabButton>
           </div>
 
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
             
-            {/* タブ1: プロフィール */}
+            {/* プロフィール */}
             {activeTab === 'profile' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label style={labelStyle(colors)}>キャラクター名</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: 光の戦士" />
-                </div>
-
-                <div>
-                  <label style={labelStyle(colors)}>X (Twitter) ID</label>
-                  <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: hika_sen" />
-                </div>
-
+                <div><label style={labelStyle(colors)}>名前</label><input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} /></div>
+                <div><label style={labelStyle(colors)}>X ID</label><input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} /></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div style={{ minWidth: 0 }}>
-                    <label style={labelStyle(colors)}>データセンター (DC)</label>
-                    <select value={dc} onChange={(e) => setDc(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-                      {dcOptions.map((item) => (
-                        <option key={item} value={item}>{item}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ minWidth: 0 }}>
-                    <label style={labelStyle(colors)}>種族</label>
-                    <select value={race} onChange={(e) => setRace(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-                      {raceOptions.map((item) => (
-                        <option key={item} value={item}>{item}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <div><label style={labelStyle(colors)}>DC</label><select value={dc} onChange={(e) => setDc(e.target.value)} style={inputStyle(colors)}>{dcOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
+                  <div><label style={labelStyle(colors)}>種族</label><select value={race} onChange={(e) => setRace(e.target.value)} style={inputStyle(colors)}>{raceOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
                 </div>
-
-                <div>
-                  <label style={labelStyle(colors)}>自己紹介・ひとこと</label>
-                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} style={inputStyle(colors)} placeholder="自己紹介テキスト" />
-                </div>
+                <div><label style={labelStyle(colors)}>自己紹介</label><textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} style={inputStyle(colors)} /></div>
               </div>
             )}
 
-            {/* タブ2: 画像設定 (並び替えボタン＆改善スライダー) */}
+            {/* 画像設定 */}
             {activeTab === 'images' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.text }}>👤 アイコン画像</h4>
-                  <FileUploadButton label="📁 画像を変更" onFileSelect={handleAvatarUpload} colors={colors} />
-                  {avatar.src && (
-                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <Slider label="左右" value={avatar.x} step={1} onChange={(v) => setAvatar({ ...avatar, x: v })} colors={colors} />
-                      <Slider label="上下" value={avatar.y} step={1} onChange={(v) => setAvatar({ ...avatar, y: v })} colors={colors} />
-                      <Slider label="拡大" value={avatar.zoom} min={1} max={2} step={0.05} onChange={(v) => setAvatar({ ...avatar, zoom: v })} colors={colors} />
-                    </div>
-                  )}
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '13px' }}>👤 アイコン</h4>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <FileUploadButton label="📁 ファイル変更" onFileSelect={handleAvatarUpload} colors={colors} />
+                    {avatar.src && (
+                      <button
+                        onClick={() => setActiveCrop({ type: 'avatar', src: avatar.src, x: avatar.x, y: avatar.y, zoom: avatar.zoom })}
+                        style={cropButtonStyle(colors)}
+                      >
+                        🖐️ ドラッグ調整
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <hr style={{ border: 'none', borderTop: `1px solid ${colors.border}`, margin: 0 }} />
 
                 <div>
-                  <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', color: colors.text }}>📷 ギャラリー画像 (3枚)</h4>
-                  <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: colors.subText }}>
-                    💡 PC: ドラッグ＆ドロップ / スマホ: 「▲」「▼」で並び替え
-                  </p>
-                  
-                  <label style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
-                    backgroundColor: colors.accent, borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#ffffff', marginBottom: '16px'
-                  }}>
-                    📁 3枚まとめて読み込む
-                    <input type="file" accept="image/*" multiple onChange={handleBatchGalleryUpload} style={{ display: 'none' }} />
-                  </label>
-
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '13px' }}>📷 ギャラリー (3枚)</h4>
                   {gallery.map((item, idx) => (
-                    <div
-                      key={idx}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, idx)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, idx)}
-                      style={{
-                        marginBottom: '14px', padding: '10px', borderRadius: '8px',
-                        border: `1px solid ${colors.border}`,
-                        backgroundColor: draggedIndex === idx ? colors.inputBg : 'transparent',
-                        cursor: 'grab',
-                        transition: 'background-color 0.2s ease'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          ⋮⋮ SS {idx + 1} {item.src && '✅'}
-                        </span>
-                        
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            disabled={idx === 0}
-                            onClick={() => moveGalleryItem(idx, idx - 1)}
-                            style={arrowButtonStyle(colors, idx === 0)}
-                            title="上に移動"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            type="button"
-                            disabled={idx === gallery.length - 1}
-                            onClick={() => moveGalleryItem(idx, idx + 1)}
-                            style={arrowButtonStyle(colors, idx === gallery.length - 1)}
-                            title="下に移動"
-                          >
-                            ▼
-                          </button>
+                    <div key={idx} style={{ marginBottom: '12px', padding: '10px', borderRadius: '8px', border: `1px solid ${colors.border}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText }}>SS {idx + 1} {item.src && '✅'}</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button disabled={idx === 0} onClick={() => moveGalleryItem(idx, idx - 1)} style={arrowStyle(colors, idx === 0)}>▲</button>
+                          <button disabled={idx === gallery.length - 1} onClick={() => moveGalleryItem(idx, idx + 1)} style={arrowStyle(colors, idx === gallery.length - 1)}>▼</button>
                           <FileUploadButton label="📁 変更" onFileSelect={handleGalleryUpload(idx)} colors={colors} />
                         </div>
                       </div>
 
                       {item.src && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <Slider label="上下" value={item.y} step={1} onChange={(v) => { const n = [...gallery]; n[idx].y = v; setGallery(n); }} colors={colors} />
-                          <Slider label="拡大" value={item.zoom} min={1} max={2} step={0.05} onChange={(v) => { const n = [...gallery]; n[idx].zoom = v; setGallery(n); }} colors={colors} />
+                        <div style={{ marginTop: '8px' }}>
+                          <button
+                            onClick={() => setActiveCrop({ type: 'gallery', index: idx, src: item.src, x: item.x || 50, y: item.y || 50, zoom: item.zoom || 1 })}
+                            style={{ ...cropButtonStyle(colors), width: '100%' }}
+                          >
+                            🖐️ 切り抜き位置をドラッグ調整
+                          </button>
                         </div>
                       )}
                     </div>
@@ -776,40 +717,31 @@ export default function App() {
               </div>
             )}
 
-            {/* タブ3: 見ため */}
+            {/* 見ため */}
             {activeTab === 'style' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle(colors)}>フォントスタイル</label>
-                  <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={{ ...inputStyle(colors), cursor: 'pointer' }}>
-                    {fontOptions.map((f) => (
-                      <option key={f.value} value={f.value}>{f.label}</option>
-                    ))}
+                  <label style={labelStyle(colors)}>フォント</label>
+                  <select value={cardFont} onChange={(e) => setCardFont(e.target.value)} style={inputStyle(colors)}>
+                    {fontOptions.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label style={labelStyle(colors)}>カラーテーマ</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '320px', overflowY: 'auto', paddingRight: '4px' }}>
-                    {Object.keys(cardThemes).map((key) => {
-                      const t = cardThemes[key];
-                      const isSelected = cardThemeKey === key;
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => setCardThemeKey(key)}
-                          style={{
-                            padding: '10px', borderRadius: '8px',
-                            border: isSelected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                            background: t.bg, color: t.text, fontWeight: 'bold', fontSize: '12px',
-                            cursor: 'pointer', textAlign: 'center',
-                            boxShadow: isSelected ? '0 0 8px rgba(99, 102, 241, 0.4)' : 'none'
-                          }}
-                        >
-                          {t.name}
-                        </button>
-                      );
-                    })}
+                  <label style={labelStyle(colors)}>テーマ</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                    {Object.keys(cardThemes).map((key) => (
+                      <button
+                        key={key}
+                        onClick={() => setCardThemeKey(key)}
+                        style={{
+                          padding: '10px', borderRadius: '8px',
+                          border: cardThemeKey === key ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                          background: cardThemes[key].bg, color: cardThemes[key].text, fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'
+                        }}
+                      >
+                        {cardThemes[key].name}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -823,21 +755,9 @@ export default function App() {
   );
 }
 
-// ----------------------------------------------------
-// 補助UIコンポーネント & スタイル定義
-// ----------------------------------------------------
 function TabButton({ active, onClick, children, colors }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '12px 6px', border: 'none',
-        backgroundColor: active ? colors.panelBg : 'transparent',
-        color: active ? colors.accent : colors.subText,
-        fontWeight: active ? 'bold' : 'normal',
-        cursor: 'pointer', fontSize: '13px', borderBottom: active ? `2px solid ${colors.accent}` : 'none'
-      }}
-    >
+    <button onClick={onClick} style={{ padding: '12px 6px', border: 'none', backgroundColor: active ? colors.panelBg : 'transparent', color: active ? colors.accent : colors.subText, fontWeight: active ? 'bold' : 'normal', cursor: 'pointer', fontSize: '13px', borderBottom: active ? `2px solid ${colors.accent}` : 'none' }}>
       {children}
     </button>
   );
@@ -845,77 +765,24 @@ function TabButton({ active, onClick, children, colors }) {
 
 function FileUploadButton({ label, onFileSelect, colors }) {
   return (
-    <label style={{
-      display: 'inline-block', padding: '6px 12px', backgroundColor: colors.inputBg,
-      border: `1px solid ${colors.border}`, borderRadius: '6px', cursor: 'pointer',
-      fontSize: '11px', fontWeight: 'bold', color: colors.text
-    }}>
+    <label style={{ padding: '6px 12px', backgroundColor: colors.inputBg, border: `1px solid ${colors.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', color: colors.text }}>
       {label}
       <input type="file" accept="image/*" onChange={onFileSelect} style={{ display: 'none' }} />
     </label>
   );
 }
 
-// 指やタップで押しやすいように「＋/ー」ボタンと高さを設けたスライダー
-function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }) {
-  const handleStep = (delta) => {
-    const nextVal = Math.min(max, Math.max(min, Math.round((value + delta) * 100) / 100));
-    onChange(nextVal);
-  };
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0' }}>
-      <span style={{ fontSize: '11px', color: colors.subText, width: '28px', fontWeight: 'bold' }}>{label}</span>
-      <button
-        type="button"
-        onClick={() => handleStep(-step)}
-        style={{
-          width: '32px', height: '32px', borderRadius: '6px', border: `1px solid ${colors.border}`,
-          backgroundColor: colors.inputBg, color: colors.text, fontSize: '14px', fontWeight: 'bold',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation'
-        }}
-      >
-        ー
-      </button>
-      <input
-        type="range" min={min} max={max} step={step} value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          flex: 1, accentColor: colors.accent, height: '28px', cursor: 'pointer', touchAction: 'none'
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => handleStep(step)}
-        style={{
-          width: '32px', height: '32px', borderRadius: '6px', border: `1px solid ${colors.border}`,
-          backgroundColor: colors.inputBg, color: colors.text, fontSize: '14px', fontWeight: 'bold',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation'
-        }}
-      >
-        ＋
-      </button>
-    </div>
-  );
-}
-
-const arrowButtonStyle = (colors, disabled) => ({
-  padding: '6px 10px',
-  borderRadius: '6px',
-  border: `1px solid ${colors.border}`,
-  backgroundColor: colors.inputBg,
-  color: colors.text,
-  fontSize: '10px',
-  cursor: disabled ? 'default' : 'pointer',
-  opacity: disabled ? 0.3 : 1,
-  touchAction: 'manipulation'
+const cropButtonStyle = (colors) => ({
+  padding: '6px 12px', borderRadius: '6px', border: `1px solid ${colors.accent}`,
+  backgroundColor: 'rgba(99, 102, 241, 0.1)', color: colors.accent,
+  fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
 });
 
-const labelStyle = (colors) => ({
-  display: 'block', fontSize: '12px', fontWeight: 'bold', color: colors.subText, marginBottom: '6px'
+const arrowStyle = (colors, disabled) => ({
+  padding: '4px 8px', borderRadius: '4px', border: `1px solid ${colors.border}`,
+  backgroundColor: colors.inputBg, color: colors.text, fontSize: '10px',
+  cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.3 : 1
 });
 
-const inputStyle = (colors) => ({
-  width: '100%', padding: '10px', borderRadius: '8px', border: `1px solid ${colors.border}`,
-  backgroundColor: colors.inputBg, color: colors.text, fontSize: '13px', boxSizing: 'border-box'
-});
+const labelStyle = (colors) => ({ display: 'block', fontSize: '12px', fontWeight: 'bold', color: colors.subText, marginBottom: '6px' });
+const inputStyle = (colors) => ({ width: '100%', padding: '10px', borderRadius: '8px', border: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, color: colors.text, fontSize: '13px', boxSizing: 'border-box' });
