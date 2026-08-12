@@ -111,7 +111,7 @@ export default function App() {
     const updateScale = () => {
       if (containerRef.current) {
         const parentWidth = containerRef.current.offsetWidth;
-        const newScale = Math.min(parentWidth / 1200, 1);
+        const newScale = parentWidth / 1200;
         setScale(newScale);
       }
     };
@@ -517,7 +517,7 @@ export default function App() {
       </header>
 
       {/* メインエリア */}
-      <div className="app-container" style={{ maxWidth: '1800px', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
+      <div className="app-container" style={{ maxWidth: '100%', margin: '0 auto', padding: '24px 16px', boxSizing: 'border-box' }}>
         
         {/* 左側: プレビュー */}
         <div className="preview-area" style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: colors.bg }}>
@@ -526,7 +526,7 @@ export default function App() {
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              width: '100%', maxWidth: '1200px', padding: '16px', fontSize: '16px', fontWeight: '800',
+              width: '100%', maxWidth: '100%', padding: '16px', fontSize: '16px', fontWeight: '800',
               backgroundColor: isGenerating ? '#94a3b8' : colors.accent, color: '#ffffff',
               border: 'none', borderRadius: '12px', cursor: isGenerating ? 'not-allowed' : 'pointer',
               marginBottom: '16px', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
