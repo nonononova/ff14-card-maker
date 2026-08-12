@@ -4,11 +4,11 @@ export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('profile');
 
-  // プロフィール情報
-  const [name, setName] = useState('Kanon');
+  // プロフィール情報 (初期値を指定に合わせて更新)
+  const [name, setName] = useState('光の戦士');
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
-  const [twitterId, setTwitterId] = useState('Cheese_Dohee');
+  const [twitterId, setTwitterId] = useState('hika_sen');
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
 
   // DC & 種族の選択肢
@@ -36,7 +36,7 @@ export default function App() {
   ];
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
-  // カラーテーマ (透明感テーマ追加)
+  // カラーテーマ
   const cardThemes = {
     glass: { name: 'クリスタル(透明感)', bg: 'rgba(255, 255, 255, 0.45)', wrapperBg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', text: '#0f172a', sub: '#475569', bio: '#1e293b', border: 'rgba(255, 255, 255, 0.6)', badgeBg: 'rgba(255, 255, 255, 0.6)', badgeText: '#0369a1', shadow: '0 20px 50px rgba(31, 38, 135, 0.15)', backdropFilter: 'blur(16px)' },
     glassDark: { name: 'ダークガラス(透明感)', bg: 'rgba(15, 23, 42, 0.55)', wrapperBg: 'linear-gradient(135deg, #0f172a 0%, #2e1065 100%)', text: '#f8fafc', sub: '#cbd5e1', bio: '#e2e8f0', border: 'rgba(255, 255, 255, 0.15)', badgeBg: 'rgba(255, 255, 255, 0.15)', badgeText: '#38bdf8', shadow: '0 25px 50px rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(16px)' },
@@ -67,7 +67,7 @@ export default function App() {
     { src: null, y: 50, zoom: 1 }
   ]);
 
-  // ドラッグ＆ドロップ管理用State
+  // ドラッグ＆ドロップ管理State
   const [draggedIndex, setDraggedIndex] = useState(null);
 
   const cardRef = useRef(null);
@@ -179,7 +179,7 @@ export default function App() {
   };
 
   // ----------------------------------------------------
-  // ドラッグ＆ドロップ用関数
+  // 並び替え処理 (ドラッグ＆ドロップ + ボタン移動)
   // ----------------------------------------------------
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
@@ -194,17 +194,20 @@ export default function App() {
   const handleDrop = (e, targetIndex) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === targetIndex) return;
-
-    const newGallery = [...gallery];
-    const [movedItem] = newGallery.splice(draggedIndex, 1);
-    newGallery.splice(targetIndex, 0, movedItem);
-
-    setGallery(newGallery);
+    moveGalleryItem(draggedIndex, targetIndex);
     setDraggedIndex(null);
   };
 
+  const moveGalleryItem = (fromIndex, toIndex) => {
+    if (toIndex < 0 || toIndex >= gallery.length) return;
+    const newGallery = [...gallery];
+    const [moved] = newGallery.splice(fromIndex, 1);
+    newGallery.splice(toIndex, 0, moved);
+    setGallery(newGallery);
+  };
+
   // ----------------------------------------------------
-  // ⭐ Canvas 2D API による高品質画像生成 ＆ 保存処理
+  // Canvas 2D API による画像生成
   // ----------------------------------------------------
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -217,7 +220,6 @@ export default function App() {
 
       const theme = cardThemes[cardThemeKey] || cardThemes.sakura;
 
-      // 角丸描画用ヘルパー
       const drawRoundRect = (x, y, w, h, r) => {
         if (typeof ctx.roundRect === 'function') {
           ctx.beginPath();
@@ -234,7 +236,7 @@ export default function App() {
         }
       };
 
-      // 1. ラッパー背景 (グラデーション対応)
+      // 1. 背景
       if (theme.wrapperBg.startsWith('linear-gradient')) {
         const grad = ctx.createLinearGradient(0, 0, 1200, 800);
         if (cardThemeKey === 'glassDark') {
@@ -250,7 +252,7 @@ export default function App() {
       }
       ctx.fillRect(0, 0, 1200, 800);
 
-      // 2. カード内側背景 (角丸 40px)
+      // 2. カード枠
       const margin = 40;
       const cardW = 1200 - margin * 2;
       const cardH = 800 - margin * 2;
@@ -261,7 +263,6 @@ export default function App() {
       drawRoundRect(cardX, cardY, cardW, cardH, 40);
       ctx.fill();
 
-      // 画像非同期読み込みヘルパー
       const loadImage = (src) => {
         return new Promise((resolve) => {
           if (!src) return resolve(null);
@@ -276,7 +277,7 @@ export default function App() {
       const avatarImg = await loadImage(avatar.src);
       const galleryImgs = await Promise.all(gallery.map((g) => loadImage(g.src)));
 
-      // 3. アイコン画像の描画 (円形)
+      // 3. アイコン描画
       const iconSize = 150;
       const iconX = cardX + 44;
       const iconY = cardY + 36;
@@ -358,7 +359,7 @@ export default function App() {
         bioY += 33;
       });
 
-      // 5. ギャラリー画像 (3枚)
+      // 5. ギャラリー画像
       const galY = cardY + 224;
       const galW = (cardW - 88 - 48) / 3;
       const galH = 410;
@@ -412,7 +413,7 @@ export default function App() {
         cardY + cardH - 24
       );
 
-      // 7. 画像出力 ＆ ダウンロード対応
+      // 7. 画像出力
       canvas.toBlob(async (blob) => {
         if (!blob) {
           setIsGenerating(false);
@@ -422,7 +423,6 @@ export default function App() {
 
         const file = new File([blob], 'ff14_card.jpg', { type: 'image/jpeg' });
 
-        // モバイルでWeb Share APIが利用可能な場合
         if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
           try {
             await navigator.share({
@@ -439,7 +439,6 @@ export default function App() {
           }
         }
 
-        // PC・その他の環境用
         const blobUrl = URL.createObjectURL(blob);
         setResultImage(blobUrl);
         setIsGenerating(false);
@@ -452,7 +451,6 @@ export default function App() {
     }
   };
 
-  // PC対応ダウンロード実行関数
   const triggerPCDownload = (url) => {
     const a = document.createElement('a');
     a.href = url;
@@ -478,7 +476,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
       
-      {/* 完成画像モーダル */}
+      {/* モーダル */}
       {resultImage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -560,7 +558,7 @@ export default function App() {
                   overflow: 'hidden'
                 }}>
                   
-                  {/* ヘッダーエリア */}
+                  {/* ヘッダー */}
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                     <div style={{
                       width: '150px', height: '150px', borderRadius: '50%',
@@ -596,7 +594,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* ギャラリーエリア */}
+                  {/* ギャラリー */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px', minHeight: 0 }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{
@@ -635,10 +633,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* 右側: タブ操作パネル */}
+        {/* 右側: パネル */}
         <div style={{ width: '100%', backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
           
-          {/* タブヘッダー */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg }}>
             <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>
               👤 プロフ
@@ -651,7 +648,6 @@ export default function App() {
             </TabButton>
           </div>
 
-          {/* タブコンテンツ */}
           <div style={{ padding: '16px' }}>
             
             {/* タブ1: プロフィール */}
@@ -659,12 +655,12 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label style={labelStyle(colors)}>キャラクター名</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: Kanon" />
+                  <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle(colors)} placeholder="例: 光の戦士" />
                 </div>
 
                 <div>
                   <label style={labelStyle(colors)}>X (Twitter) ID</label>
-                  <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: Cheese_Dohee" />
+                  <input value={twitterId} onChange={(e) => setTwitterId(e.target.value)} style={inputStyle(colors)} placeholder="例: hika_sen" />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -694,17 +690,17 @@ export default function App() {
               </div>
             )}
 
-            {/* タブ2: 画像設定 (ドラッグ＆ドロップ対応) */}
+            {/* タブ2: 画像設定 (並び替えボタン＆改善スライダー) */}
             {activeTab === 'images' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.text }}>👤 アイコン画像</h4>
                   <FileUploadButton label="📁 画像を変更" onFileSelect={handleAvatarUpload} colors={colors} />
                   {avatar.src && (
-                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <Slider label="左右" value={avatar.x} step={1} onChange={(v) => setAvatar({ ...avatar, x: v })} colors={colors} />
                       <Slider label="上下" value={avatar.y} step={1} onChange={(v) => setAvatar({ ...avatar, y: v })} colors={colors} />
-                      <Slider label="拡大" value={avatar.zoom} min={1} max={2} step={0.02} onChange={(v) => setAvatar({ ...avatar, zoom: v })} colors={colors} />
+                      <Slider label="拡大" value={avatar.zoom} min={1} max={2} step={0.05} onChange={(v) => setAvatar({ ...avatar, zoom: v })} colors={colors} />
                     </div>
                   )}
                 </div>
@@ -713,7 +709,9 @@ export default function App() {
 
                 <div>
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', color: colors.text }}>📷 ギャラリー画像 (3枚)</h4>
-                  <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: colors.subText }}>💡 項目をドラッグ＆ドロップして並び替えできます</p>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: colors.subText }}>
+                    💡 PC: ドラッグ＆ドロップ / スマホ: 「▲」「▼」で並び替え
+                  </p>
                   
                   <label style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px',
@@ -740,15 +738,36 @@ export default function App() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.subText, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          ☰ SS {idx + 1} {item.src && '✅'}
+                          ⋮⋮ SS {idx + 1} {item.src && '✅'}
                         </span>
-                        <FileUploadButton label="📁 変更" onFileSelect={handleGalleryUpload(idx)} colors={colors} />
+                        
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveGalleryItem(idx, idx - 1)}
+                            style={arrowButtonStyle(colors, idx === 0)}
+                            title="上に移動"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === gallery.length - 1}
+                            onClick={() => moveGalleryItem(idx, idx + 1)}
+                            style={arrowButtonStyle(colors, idx === gallery.length - 1)}
+                            title="下に移動"
+                          >
+                            ▼
+                          </button>
+                          <FileUploadButton label="📁 変更" onFileSelect={handleGalleryUpload(idx)} colors={colors} />
+                        </div>
                       </div>
 
                       {item.src && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <Slider label="上下" value={item.y} step={1} onChange={(v) => { const n = [...gallery]; n[idx].y = v; setGallery(n); }} colors={colors} />
-                          <Slider label="拡大" value={item.zoom} min={1} max={2} step={0.02} onChange={(v) => { const n = [...gallery]; n[idx].zoom = v; setGallery(n); }} colors={colors} />
+                          <Slider label="拡大" value={item.zoom} min={1} max={2} step={0.05} onChange={(v) => { const n = [...gallery]; n[idx].zoom = v; setGallery(n); }} colors={colors} />
                         </div>
                       )}
                     </div>
@@ -757,7 +776,7 @@ export default function App() {
               </div>
             )}
 
-            {/* タブ3: 見ため (スタイル・テーマ) */}
+            {/* タブ3: 見ため */}
             {activeTab === 'style' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
@@ -837,18 +856,60 @@ function FileUploadButton({ label, onFileSelect, colors }) {
   );
 }
 
+// 指やタップで押しやすいように「＋/ー」ボタンと高さを設けたスライダー
 function Slider({ label, value, min = 0, max = 100, step = 1, onChange, colors }) {
+  const handleStep = (delta) => {
+    const nextVal = Math.min(max, Math.max(min, Math.round((value + delta) * 100) / 100));
+    onChange(nextVal);
+  };
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ fontSize: '11px', color: colors.subText, width: '28px' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0' }}>
+      <span style={{ fontSize: '11px', color: colors.subText, width: '28px', fontWeight: 'bold' }}>{label}</span>
+      <button
+        type="button"
+        onClick={() => handleStep(-step)}
+        style={{
+          width: '32px', height: '32px', borderRadius: '6px', border: `1px solid ${colors.border}`,
+          backgroundColor: colors.inputBg, color: colors.text, fontSize: '14px', fontWeight: 'bold',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation'
+        }}
+      >
+        ー
+      </button>
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{ flex: 1, accentColor: colors.accent }}
+        style={{
+          flex: 1, accentColor: colors.accent, height: '28px', cursor: 'pointer', touchAction: 'none'
+        }}
       />
+      <button
+        type="button"
+        onClick={() => handleStep(step)}
+        style={{
+          width: '32px', height: '32px', borderRadius: '6px', border: `1px solid ${colors.border}`,
+          backgroundColor: colors.inputBg, color: colors.text, fontSize: '14px', fontWeight: 'bold',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation'
+        }}
+      >
+        ＋
+      </button>
     </div>
   );
 }
+
+const arrowButtonStyle = (colors, disabled) => ({
+  padding: '6px 10px',
+  borderRadius: '6px',
+  border: `1px solid ${colors.border}`,
+  backgroundColor: colors.inputBg,
+  color: colors.text,
+  fontSize: '10px',
+  cursor: disabled ? 'default' : 'pointer',
+  opacity: disabled ? 0.3 : 1,
+  touchAction: 'manipulation'
+});
 
 const labelStyle = (colors) => ({
   display: 'block', fontSize: '12px', fontWeight: 'bold', color: colors.subText, marginBottom: '6px'
