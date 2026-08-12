@@ -110,10 +110,10 @@ export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('profile');
 
-  const [name, setName] = useState('光の戦士');
+  const [name, setName] = useState('Kanon');
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
-  const [twitterId, setTwitterId] = useState('hika_sen');
+  const [twitterId, setTwitterId] = useState('Cheese_Dohee');
   const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
 
   const dcOptions = ['Mana', 'Elemental', 'Gaia', 'Meteor', 'Aether', 'Primal', 'Crystal', 'Dynamis', 'Light', 'Chaos', 'Materia'];
@@ -132,26 +132,20 @@ export default function App() {
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
   const cardThemes = {
+    sakura: { name: 'サクラ', bg: '#fff0f3', wrapperBg: '#ffe4e8', text: '#9f1239', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 15px 40px rgba(136, 19, 55, 0.1)' },
     glass: { name: 'クリスタル(透明感)', bg: 'rgba(255, 255, 255, 0.45)', wrapperBg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', text: '#0f172a', sub: '#475569', bio: '#1e293b', border: 'rgba(255, 255, 255, 0.6)', badgeBg: 'rgba(255, 255, 255, 0.6)', badgeText: '#0369a1', shadow: '0 20px 50px rgba(31, 38, 135, 0.15)', backdropFilter: 'blur(16px)' },
     glassDark: { name: 'ダークガラス(透明感)', bg: 'rgba(15, 23, 42, 0.55)', wrapperBg: 'linear-gradient(135deg, #0f172a 0%, #2e1065 100%)', text: '#f8fafc', sub: '#cbd5e1', bio: '#e2e8f0', border: 'rgba(255, 255, 255, 0.15)', badgeBg: 'rgba(255, 255, 255, 0.15)', badgeText: '#38bdf8', shadow: '0 25px 50px rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(16px)' },
-    sakura: { name: 'サクラ', bg: '#fff5f7', wrapperBg: '#e5e5e5', text: '#881337', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 15px 40px rgba(136, 19, 55, 0.1)' },
     cyber: { name: 'サイバー', bg: '#030712', wrapperBg: '#0f172a', text: '#22d3ee', sub: '#64748b', bio: '#94a3b8', border: '#1f2937', badgeBg: '#1f2937', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(34, 211, 238, 0.35)' },
     blood: { name: 'ブラッド', bg: '#180202', wrapperBg: '#270303', text: '#f43f5e', sub: '#9f1239', bio: '#fecdd3', border: '#4c0519', badgeBg: '#4c0519', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 63, 94, 0.35)' },
     royal: { name: 'ロイヤル', bg: '#0f0728', wrapperBg: '#1e1b4b', text: '#eab308', sub: '#a855f7', bio: '#fef08a', border: '#2e1065', badgeBg: '#2e1065', badgeText: '#fde047', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(234, 179, 8, 0.35)' },
     frost: { name: 'フロスト', bg: '#082f49', wrapperBg: '#075985', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: '#0369a1', badgeBg: '#0369a1', badgeText: '#bae6fd', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.35)' },
     midnight: { name: '黒金', bg: '#09090b', wrapperBg: '#18181b', text: '#facc15', sub: '#a1a1aa', bio: '#e4e4e7', border: '#27272a', badgeBg: '#27272a', badgeText: '#facc15', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(250, 204, 21, 0.3)' },
-    astral: { name: 'アストラル', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#1e293b', badgeBg: '#1e293b', badgeText: '#38bdf8', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.3)' },
     strawberry: { name: 'いちご', bg: '#ffffff', wrapperBg: '#fff1f2', text: '#e11d48', sub: '#fb7185', bio: '#881337', border: '#ffe4e6', badgeBg: '#ffe4e6', badgeText: '#e11d48', shadow: '0 15px 40px rgba(225, 29, 72, 0.1)' },
     chocolat: { name: 'ショコラ', bg: '#fdfbf7', wrapperBg: '#fef3c7', text: '#451a03', sub: '#78350f', bio: '#292524', border: '#fde68a', badgeBg: '#fde68a', badgeText: '#78350f', shadow: '0 15px 40px rgba(69, 26, 3, 0.1)' },
-    rose: { name: 'ロゼ', bg: '#fff1f2', wrapperBg: '#ffe4e6', text: '#9f1239', sub: '#e11d48', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#be123c', shadow: '0 15px 40px rgba(159, 18, 57, 0.1)' },
-    mint: { name: 'ミント', bg: '#f0fdf4', wrapperBg: '#dcfce7', text: '#047857', sub: '#34d399', bio: '#064e3b', border: '#bbf7d0', badgeBg: '#bbf7d0', badgeText: '#047857', shadow: '0 15px 40px rgba(4, 120, 87, 0.1)' },
-    lavender: { name: 'ラベンダー', bg: '#faf5ff', wrapperBg: '#f3e8ff', text: '#6b21a8', sub: '#c084fc', bio: '#3b0764', border: '#e9d5ff', badgeBg: '#e9d5ff', badgeText: '#6b21a8', shadow: '0 15px 40px rgba(107, 33, 168, 0.1)' },
-    forest: { name: 'フォレスト', bg: '#f4fbf7', wrapperBg: '#d1fae5', text: '#065f46', sub: '#059669', bio: '#022c22', border: '#a7f3d0', badgeBg: '#a7f3d0', badgeText: '#047857', shadow: '0 15px 40px rgba(6, 95, 70, 0.1)' },
     white: { name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.08)' },
-    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)' },
-    gold: { name: 'ゴールド', bg: '#fefce8', wrapperBg: '#fef08a', text: '#713f12', sub: '#ca8a04', bio: '#422006', border: '#fde047', badgeBg: '#fde047', badgeText: '#854d0e', shadow: '0 15px 40px rgba(113, 63, 18, 0.15)' }
+    dark: { name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)' }
   };
-  const [cardThemeKey, setCardThemeKey] = useState('glass');
+  const [cardThemeKey, setCardThemeKey] = useState('sakura');
 
   const [avatar, setAvatar] = useState({ src: null, x: 50, y: 50, zoom: 1 });
   const [gallery, setGallery] = useState([
@@ -172,7 +166,7 @@ export default function App() {
     if (!document.getElementById(linkId)) {
       const link = document.createElement('link');
       link.id = linkId;
-      link.href = 'https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700&family=Potta+One&family=Yuji+Syuku&family=Kiwi+Maru:wght@500;700&family=Shippori+Mincho:wght@700&family=Zen+Maru+Gothic:wght@700;900&display=swap';
+      link.href = 'https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700&family=Potta One&family=Yuji+Syuku&family=Kiwi+Maru:wght@500;700&family=Shippori+Mincho:wght@700&family=Zen+Maru+Gothic:wght@700;900&display=swap';
       link.rel = 'stylesheet';
       document.head.appendChild(link);
     }
@@ -363,14 +357,14 @@ export default function App() {
       const avatarImg = await loadImage(avatar.src);
       const galleryImgs = await Promise.all(gallery.map((g) => loadImage(g.src)));
 
-      const iconSize = 150;
+      const iconSize = 140;
       const iconX = cardX + 44;
       const iconY = cardY + 36;
       const iconCenterX = iconX + iconSize / 2;
       const iconCenterY = iconY + iconSize / 2;
 
       ctx.beginPath();
-      ctx.arc(iconCenterX, iconCenterY, iconSize / 2 + 8, 0, Math.PI * 2);
+      ctx.arc(iconCenterX, iconCenterY, iconSize / 2 + 6, 0, Math.PI * 2);
       ctx.fillStyle = theme.border;
       ctx.fill();
 
@@ -399,58 +393,59 @@ export default function App() {
 
       const fontName = cardFont.split(',')[0].replace(/'/g, '').trim();
       const textStartX = iconX + iconSize + 24;
-      let currentY = iconY + 42;
+      let currentY = iconY + 38;
 
       ctx.fillStyle = theme.text;
-      ctx.font = `900 42px ${fontName}, sans-serif`;
+      ctx.font = `900 40px ${fontName}, sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(name, textStartX, currentY);
       const nameWidth = ctx.measureText(name).width;
 
       ctx.fillStyle = theme.sub;
-      ctx.font = `700 24px ${fontName}, sans-serif`;
+      ctx.font = `700 22px ${fontName}, sans-serif`;
       ctx.fillText(`@${twitterId}`, textStartX + nameWidth + 16, currentY);
       const idWidth = ctx.measureText(`@${twitterId}`).width;
 
       const badgeText = `${dc} | ${race}`;
-      ctx.font = `800 18px ${fontName}, sans-serif`;
-      const badgePaddingH = 16;
+      ctx.font = `800 17px ${fontName}, sans-serif`;
+      const badgePaddingH = 14;
       const badgeW = ctx.measureText(badgeText).width + badgePaddingH * 2;
-      const badgeH = 36;
+      const badgeH = 34;
       const badgeX = textStartX + nameWidth + 16 + idWidth + 16;
-      const badgeY = currentY - 26;
+      const badgeY = currentY - 24;
 
       ctx.fillStyle = theme.badgeBg;
-      drawRoundRect(badgeX, badgeY, badgeW, badgeH, 12);
+      drawRoundRect(badgeX, badgeY, badgeW, badgeH, 10);
       ctx.fill();
 
       ctx.fillStyle = theme.badgeText;
-      ctx.fillText(badgeText, badgeX + badgePaddingH, badgeY + 24);
+      ctx.fillText(badgeText, badgeX + badgePaddingH, badgeY + 23);
 
       ctx.fillStyle = theme.sub;
       ctx.globalAlpha = 0.6;
-      ctx.font = '44px sans-serif';
+      ctx.font = '40px sans-serif';
       ctx.fillText('•••', cardX + cardW - 80, currentY);
       ctx.globalAlpha = 1.0;
 
       ctx.fillStyle = theme.bio;
-      ctx.font = `500 22px ${fontName}, sans-serif`;
+      ctx.font = `500 21px ${fontName}, sans-serif`;
       const bioLines = bio.split('\n');
-      let bioY = currentY + 40;
+      let bioY = currentY + 38;
       bioLines.forEach((line) => {
         ctx.fillText(line, textStartX, bioY);
-        bioY += 33;
+        bioY += 32;
       });
 
-      const galY = cardY + 224;
+      // --- ギャラリー画像エリア設定 ---
+      const galY = cardY + 215;
       const galW = (cardW - 88 - 48) / 3;
-      const galH = 410;
+      const galH = 430; // サンプル画像に合わせた縦長バランス
 
       for (let i = 0; i < 3; i++) {
         const gx = cardX + 44 + i * (galW + 24);
         ctx.save();
-        drawRoundRect(gx, galY, galW, galH, 24);
+        drawRoundRect(gx, galY, galW, galH, 28);
         ctx.clip();
 
         ctx.fillStyle = theme.border;
@@ -485,14 +480,22 @@ export default function App() {
         ctx.restore();
       }
 
+      // --- 下部著作権・スクエニ表記 ---
       ctx.fillStyle = theme.sub;
-      ctx.font = `500 15px ${fontName}, sans-serif`;
+      ctx.font = `700 13px ${fontName}, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(
         'Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.',
         cardX + cardW / 2,
-        cardY + cardH - 24
+        cardY + cardH - 30
+      );
+      
+      ctx.font = `500 11px ${fontName}, sans-serif`;
+      ctx.fillText(
+        '(C) SQUARE ENIX CO., LTD. All Rights Reserved.',
+        cardX + cardW / 2,
+        cardY + cardH - 14
       );
 
       canvas.toBlob((blob) => {
@@ -524,7 +527,7 @@ export default function App() {
     accent: '#6366f1',
   };
 
-  const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.glass;
+  const activeCardTheme = cardThemes[cardThemeKey] || cardThemes.sakura;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: "-apple-system, sans-serif", paddingBottom: '40px' }}>
@@ -589,17 +592,16 @@ export default function App() {
             <div style={{ width: '1200px', height: '800px', transform: `scale(${scale})`, transformOrigin: 'top center' }}>
               <div ref={cardRef} style={{ width: '1200px', height: '800px', background: activeCardTheme.wrapperBg, padding: '40px', boxSizing: 'border-box', display: 'flex' }}>
                 <div style={{
-                  flex: 1, background: activeCardTheme.bg, borderRadius: '40px', padding: '36px 44px',
+                  flex: 1, background: activeCardTheme.bg, borderRadius: '40px', padding: '36px 44px 20px 44px',
                   fontFamily: cardFont, border: `1px solid ${activeCardTheme.border}`,
                   backdropFilter: activeCardTheme.backdropFilter || 'none', display: 'flex', flexDirection: 'column',
                   overflow: 'hidden', isolation: 'isolate'
                 }}>
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                     
-                    {/* アイコン枠：はみ出し防止を設定 */}
                     <div style={{ 
-                      width: '150px', height: '150px', borderRadius: '50%', 
-                      border: `8px solid ${activeCardTheme.border}`, backgroundColor: activeCardTheme.border, 
+                      width: '140px', height: '140px', borderRadius: '50%', 
+                      border: `6px solid ${activeCardTheme.border}`, backgroundColor: activeCardTheme.border, 
                       overflow: 'hidden', flexShrink: 0, isolation: 'isolate', transform: 'translateZ(0)' 
                     }}>
                       {avatar.src ? (
@@ -611,19 +613,19 @@ export default function App() {
 
                     <div style={{ flex: 1, paddingTop: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <h2 style={{ margin: 0, fontSize: '42px', fontWeight: '900', color: activeCardTheme.text }}>{name}</h2>
-                        <span style={{ fontSize: '24px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
-                        <span style={{ backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText, padding: '8px 16px', borderRadius: '12px', fontSize: '18px', fontWeight: '800' }}>{dc} | {race}</span>
+                        <h2 style={{ margin: 0, fontSize: '40px', fontWeight: '900', color: activeCardTheme.text }}>{name}</h2>
+                        <span style={{ fontSize: '22px', color: activeCardTheme.sub, fontWeight: '700' }}>@{twitterId}</span>
+                        <span style={{ backgroundColor: activeCardTheme.badgeBg, color: activeCardTheme.badgeText, padding: '6px 14px', borderRadius: '10px', fontSize: '17px', fontWeight: '800' }}>{dc} | {race}</span>
                       </div>
-                      <p style={{ margin: '14px 0 0 0', fontSize: '22px', color: activeCardTheme.bio, whiteSpace: 'pre-wrap' }}>{bio}</p>
+                      <p style={{ margin: '12px 0 0 0', fontSize: '21px', color: activeCardTheme.bio, whiteSpace: 'pre-wrap' }}>{bio}</p>
                     </div>
                   </div>
 
-                  {/* ギャラリー枠：はみ出し防止を設定 */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', flex: 1, marginTop: '28px' }}>
+                  {/* ギャラリー領域：高さを大きくして添付画像の比率に適合 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', height: '430px', marginTop: '20px' }}>
                     {gallery.map((item, idx) => (
                       <div key={idx} style={{ 
-                        borderRadius: '24px', backgroundColor: activeCardTheme.border, 
+                        borderRadius: '28px', backgroundColor: activeCardTheme.border, 
                         overflow: 'hidden', position: 'relative', isolation: 'isolate', transform: 'translateZ(0)' 
                       }}>
                         {item.src ? (
@@ -634,6 +636,17 @@ export default function App() {
                       </div>
                     ))}
                   </div>
+
+                  {/* 最下部コピーライト */}
+                  <div style={{ marginTop: 'auto', textAlign: 'center', paddingBottom: '4px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: activeCardTheme.sub }}>
+                      Design Copyright © FF14 SS Showcase Card Generator. All rights reserved.
+                    </div>
+                    <div style={{ fontSize: '11px', fontWeight: '500', color: activeCardTheme.sub, opacity: 0.9, marginTop: '2px' }}>
+                      (C) SQUARE ENIX CO., LTD. All Rights Reserved.
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
