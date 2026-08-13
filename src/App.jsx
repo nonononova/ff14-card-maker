@@ -11,12 +11,14 @@ function CropModal({ imageSrc, cropType = 'gallery', initialX = 50, initialY = 5
   const isAvatar = cropType === 'avatar';
 
   const handleMouseDown = (e) => {
+    e.preventDefault();
     setIsDragging(true);
     startPos.current = { x: e.clientX - x, y: e.clientY - y };
   };
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
+    e.preventDefault();
     const newX = Math.min(100, Math.max(0, e.clientX - startPos.current.x));
     const newY = Math.min(100, Math.max(0, e.clientY - startPos.current.y));
     setX(newX);
@@ -40,20 +42,21 @@ function CropModal({ imageSrc, cropType = 'gallery', initialX = 50, initialY = 5
     setY(newY);
   };
 
-  // 実際の設定比率に合わせる（アイコン: 1:1円形, ギャラリー: 284:455 の縦長比率）
+  // 実物のカード枠サイズ（横328px : 縦455px）と完全に一致させた比率計算
   const containerWidth = isAvatar ? 260 : 250;
-  const containerHeight = isAvatar ? 260 : Math.round(250 * (455 / 284)); // 約 400px
+  const containerHeight = isAvatar ? 260 : Math.round(250 * (455 / 328)); // 約 347px
 
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 10000,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px'
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px',
+      userSelect: 'none'
     }}>
       <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '16px', maxWidth: '480px', width: '100%', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>✋ 画像の位置・縮小拡大の調整</h3>
         <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
-          実物と同じ比率の枠内をドラッグ（操作）して表示範囲を決めてください。
+          実物と全く同じ比率の枠内をドラッグして表示領域を調整できます。
         </p>
 
         <div
@@ -82,7 +85,8 @@ function CropModal({ imageSrc, cropType = 'gallery', initialX = 50, initialY = 5
               width: '100%', height: '100%', objectFit: 'cover',
               objectPosition: `${x}% ${y}%`,
               transform: `scale(${zoom})`,
-              pointerEvents: 'none'
+              pointerEvents: 'none',
+              userSelect: 'none'
             }}
           />
         </div>
@@ -119,7 +123,6 @@ export default function App() {
   const [siteTheme, setSiteTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('profile');
 
-  // 初期値の変更
   const [name, setName] = useState('光の戦士');
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
@@ -141,42 +144,50 @@ export default function App() {
   ];
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
-  // 全24種類のテーマ（4カテゴリ）
+  // 全32種類のテーマ（各カテゴリ8種類ずつ）
   const themeCategories = ['すべて', 'シンプル', 'かわいい', 'かっこいい', 'ゴージャス'];
   const [selectedCategory, setSelectedCategory] = useState('すべて');
 
   const cardThemes = {
-    // --- シンプル ---
+    // --- シンプル (8種) ---
     white: { category: 'シンプル', name: 'ホワイト', bg: '#ffffff', wrapperBg: '#f1f5f9', text: '#0f172a', sub: '#64748b', bio: '#334155', border: '#e2e8f0', badgeBg: '#e2e8f0', badgeText: '#475569', shadow: '0 20px 40px rgba(15, 23, 42, 0.12)', shadowColor: 'rgba(15, 23, 42, 0.2)' },
     dark: { category: 'シンプル', name: 'ダーク', bg: '#1e293b', wrapperBg: '#0f172a', text: '#f8fafc', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#cbd5e1', shadow: '0 25px 60px rgba(0, 0, 0, 0.8)', shadowColor: 'rgba(0, 0, 0, 0.7)' },
     monochrome: { category: 'シンプル', name: 'モノクロ', bg: '#111111', wrapperBg: '#222222', text: '#ffffff', sub: '#888888', bio: '#cccccc', border: '#333333', badgeBg: '#333333', badgeText: '#ffffff', shadow: '0 20px 50px rgba(0,0,0,0.8)', shadowColor: 'rgba(0, 0, 0, 0.8)' },
     gray: { category: 'シンプル', name: 'グレイッシュ', bg: '#f8fafc', wrapperBg: '#e2e8f0', text: '#334155', sub: '#64748b', bio: '#475569', border: '#cbd5e1', badgeBg: '#cbd5e1', badgeText: '#1e293b', shadow: '0 15px 35px rgba(0,0,0,0.1)', shadowColor: 'rgba(0,0,0,0.15)' },
     mocha: { category: 'シンプル', name: 'モカ', bg: '#fdfbf7', wrapperBg: '#f5f0eb', text: '#54433a', sub: '#8c7a6b', bio: '#6e5d4f', border: '#e6ded6', badgeBg: '#e6ded6', badgeText: '#54433a', shadow: '0 15px 35px rgba(84,67,58,0.15)', shadowColor: 'rgba(84,67,58,0.2)' },
     minimal: { category: 'シンプル', name: 'ミニマル', bg: '#ffffff', wrapperBg: '#e5e7eb', text: '#111827', sub: '#6b7280', bio: '#374151', border: '#d1d5db', badgeBg: '#f3f4f6', badgeText: '#111827', shadow: '0 10px 30px rgba(0,0,0,0.08)', shadowColor: 'rgba(0,0,0,0.12)' },
+    slate: { category: 'シンプル', name: 'スレート', bg: '#1e293b', wrapperBg: '#334155', text: '#e2e8f0', sub: '#94a3b8', bio: '#cbd5e1', border: '#475569', badgeBg: '#475569', badgeText: '#f8fafc', shadow: '0 20px 45px rgba(15, 23, 42, 0.5)', shadowColor: 'rgba(15, 23, 42, 0.5)' },
+    sand: { category: 'シンプル', name: 'サンド', bg: '#fefce8', wrapperBg: '#fef9c3', text: '#713f12', sub: '#a16207', bio: '#854d0e', border: '#fef08a', badgeBg: '#fef08a', badgeText: '#713f12', shadow: '0 15px 35px rgba(113, 63, 18, 0.12)', shadowColor: 'rgba(113, 63, 18, 0.18)' },
 
-    // --- かわいい ---
+    // --- かわいい (8種) ---
     sakura: { category: 'かわいい', name: 'サクラ', bg: '#fff0f3', wrapperBg: '#ffe4e8', text: '#9f1239', sub: '#be123c', bio: '#4c0519', border: '#fecdd3', badgeBg: '#fecdd3', badgeText: '#9f1239', shadow: '0 18px 45px rgba(136, 19, 55, 0.18)', shadowColor: 'rgba(136, 19, 55, 0.25)' },
     strawberry: { category: 'かわいい', name: 'いちご', bg: '#ffffff', wrapperBg: '#fff1f2', text: '#e11d48', sub: '#fb7185', bio: '#881337', border: '#ffe4e6', badgeBg: '#ffe4e6', badgeText: '#e11d48', shadow: '0 18px 45px rgba(225, 29, 72, 0.18)', shadowColor: 'rgba(225, 29, 72, 0.25)' },
     mint: { category: 'かわいい', name: 'ミント', bg: '#f0fdf4', wrapperBg: '#dcfce7', text: '#15803d', sub: '#22c55e', bio: '#14532d', border: '#bbf7d0', badgeBg: '#bbf7d0', badgeText: '#15803d', shadow: '0 18px 45px rgba(21, 128, 61, 0.18)', shadowColor: 'rgba(21, 128, 61, 0.25)' },
     lavender: { category: 'かわいい', name: 'ラベンダー', bg: '#faf5ff', wrapperBg: '#f3e8ff', text: '#7e22ce', sub: '#a855f7', bio: '#581c87', border: '#e9d5ff', badgeBg: '#e9d5ff', badgeText: '#7e22ce', shadow: '0 18px 45px rgba(126, 34, 206, 0.18)', shadowColor: 'rgba(126, 34, 206, 0.25)' },
     honey: { category: 'かわいい', name: 'ハニー', bg: '#fffbeb', wrapperBg: '#fef3c7', text: '#b45309', sub: '#f59e0b', bio: '#78350f', border: '#fde68a', badgeBg: '#fde68a', badgeText: '#b45309', shadow: '0 18px 45px rgba(180, 83, 9, 0.18)', shadowColor: 'rgba(180, 83, 9, 0.25)' },
     peach: { category: 'かわいい', name: 'ピーチ', bg: '#fff7ed', wrapperBg: '#ffedd5', text: '#c2410c', sub: '#f97316', bio: '#7c2d12', border: '#fed7aa', badgeBg: '#fed7aa', badgeText: '#c2410c', shadow: '0 18px 45px rgba(194, 65, 12, 0.18)', shadowColor: 'rgba(194, 65, 12, 0.25)' },
+    chocolat: { category: 'かわいい', name: 'ショコラ', bg: '#2d1b18', wrapperBg: '#442823', text: '#f5d0a9', sub: '#c08a5d', bio: '#fde8d0', border: '#5c3a33', badgeBg: '#5c3a33', badgeText: '#f5d0a9', shadow: '0 20px 45px rgba(0,0,0,0.6)', shadowColor: 'rgba(0, 0, 0, 0.65)' },
+    soda: { category: 'かわいい', name: 'ソーダ', bg: '#ecfeff', wrapperBg: '#cffaff', text: '#0e7490', sub: '#06b6d4', bio: '#164e63', border: '#a5f3fc', badgeBg: '#a5f3fc', badgeText: '#0e7490', shadow: '0 18px 45px rgba(14, 116, 144, 0.18)', shadowColor: 'rgba(14, 116, 144, 0.25)' },
 
-    // --- かっこいい ---
+    // --- かっこいい (8種) ---
     cyber: { category: 'かっこいい', name: 'サイバー', bg: '#030712', wrapperBg: '#0f172a', text: '#22d3ee', sub: '#64748b', bio: '#94a3b8', border: '#1f2937', badgeBg: '#1f2937', badgeText: '#22d3ee', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(34, 211, 238, 0.35)', shadowColor: 'rgba(34, 211, 238, 0.45)' },
     blood: { category: 'かっこいい', name: 'ブラッド', bg: '#180202', wrapperBg: '#270303', text: '#f43f5e', sub: '#9f1239', bio: '#fecdd3', border: '#4c0519', badgeBg: '#4c0519', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 63, 94, 0.35)', shadowColor: 'rgba(244, 63, 94, 0.45)' },
     frost: { category: 'かっこいい', name: 'フロスト', bg: '#082f49', wrapperBg: '#075985', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: '#0369a1', badgeBg: '#0369a1', badgeText: '#bae6fd', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.35)', shadowColor: 'rgba(56, 189, 248, 0.45)' },
     navy: { category: 'かっこいい', name: 'ネイビー', bg: '#0f172a', wrapperBg: '#1e293b', text: '#38bdf8', sub: '#94a3b8', bio: '#cbd5e1', border: '#334155', badgeBg: '#334155', badgeText: '#38bdf8', shadow: '0 20px 50px rgba(0,0,0,0.6)', shadowColor: 'rgba(0, 0, 0, 0.6)' },
     emerald: { category: 'かっこいい', name: 'エメラルド', bg: '#022c22', wrapperBg: '#064e3b', text: '#34d399', sub: '#059669', bio: '#a7f3d0', border: '#047857', badgeBg: '#047857', badgeText: '#a7f3d0', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(52, 211, 153, 0.3)', shadowColor: 'rgba(52, 211, 153, 0.4)' },
     neonPurple: { category: 'かっこいい', name: 'ネオンパープル', bg: '#1a0b2e', wrapperBg: '#2b1055', text: '#c084fc', sub: '#8b5cf6', bio: '#e9d5ff', border: '#581c87', badgeBg: '#581c87', badgeText: '#c084fc', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(192, 132, 252, 0.35)', shadowColor: 'rgba(192, 132, 252, 0.45)' },
+    crimson: { category: 'かっこいい', name: 'クリムゾン', bg: '#1f0910', wrapperBg: '#380f1d', text: '#fb7185', sub: '#f43f5e', bio: '#ffe4e6', border: '#881337', badgeBg: '#881337', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(251, 113, 133, 0.35)', shadowColor: 'rgba(251, 113, 133, 0.45)' },
+    midnightBlue: { category: 'かっこいい', name: '深海', bg: '#0a1128', wrapperBg: '#001f54', text: '#64dfdf', sub: '#48cae4', bio: '#caf0f8', border: '#03045e', badgeBg: '#03045e', badgeText: '#64dfdf', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(100, 223, 223, 0.35)', shadowColor: 'rgba(100, 223, 223, 0.45)' },
 
-    // --- ゴージャス ---
+    // --- ゴージャス (8種) ---
     midnight: { category: 'ゴージャス', name: '黒金', bg: '#09090b', wrapperBg: '#18181b', text: '#facc15', sub: '#a1a1aa', bio: '#e4e4e7', border: '#27272a', badgeBg: '#27272a', badgeText: '#facc15', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(250, 204, 21, 0.3)', shadowColor: 'rgba(250, 204, 21, 0.4)' },
     royal: { category: 'ゴージャス', name: 'ロイヤル', bg: '#0f0728', wrapperBg: '#1e1b4b', text: '#eab308', sub: '#a855f7', bio: '#fef08a', border: '#2e1065', badgeBg: '#2e1065', badgeText: '#fde047', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(234, 179, 8, 0.35)', shadowColor: 'rgba(234, 179, 8, 0.45)' },
     glass: { category: 'ゴージャス', name: 'クリスタル', bg: 'rgba(255, 255, 255, 0.45)', wrapperBg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', text: '#0f172a', sub: '#475569', bio: '#1e293b', border: 'rgba(255, 255, 255, 0.6)', badgeBg: 'rgba(255, 255, 255, 0.6)', badgeText: '#0369a1', shadow: '0 20px 50px rgba(31, 38, 135, 0.2)', backdropFilter: 'blur(16px)', shadowColor: 'rgba(31, 38, 135, 0.3)' },
     glassDark: { category: 'ゴージャス', name: 'ダークガラス', bg: 'rgba(15, 23, 42, 0.55)', wrapperBg: 'linear-gradient(135deg, #0f172a 0%, #2e1065 100%)', text: '#f8fafc', sub: '#cbd5e1', bio: '#e2e8f0', border: 'rgba(255, 255, 255, 0.15)', badgeBg: 'rgba(255, 255, 255, 0.15)', badgeText: '#38bdf8', shadow: '0 25px 50px rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(16px)', shadowColor: 'rgba(0, 0, 0, 0.65)' },
     champagne: { category: 'ゴージャス', name: 'シャンパン', bg: '#2b2319', wrapperBg: '#3d3224', text: '#f3d08a', sub: '#c5a059', bio: '#fcefc7', border: '#594935', badgeBg: '#594935', badgeText: '#f3d08a', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(243, 208, 138, 0.3)', shadowColor: 'rgba(243, 208, 138, 0.4)' },
-    deepRose: { category: 'ゴージャス', name: 'ディープローズ', bg: '#230914', wrapperBg: '#3b1022', text: '#f472b6', sub: '#be185d', bio: '#fbcfe8', border: '#58122c', badgeBg: '#58122c', badgeText: '#f472b6', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 114, 182, 0.3)', shadowColor: 'rgba(244, 114, 182, 0.4)' }
+    deepRose: { category: 'ゴージャス', name: 'ディープローズ', bg: '#230914', wrapperBg: '#3b1022', text: '#f472b6', sub: '#be185d', bio: '#fbcfe8', border: '#58122c', badgeBg: '#58122c', badgeText: '#f472b6', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 114, 182, 0.3)', shadowColor: 'rgba(244, 114, 182, 0.4)' },
+    goldLuxury: { category: 'ゴージャス', name: '純金', bg: '#110f0a', wrapperBg: '#241f13', text: '#ffd700', sub: '#e6c200', bio: '#fff3a8', border: '#4a3f21', badgeBg: '#4a3f21', badgeText: '#ffd700', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)', shadowColor: 'rgba(255, 215, 0, 0.45)' },
+    amethyst: { category: 'ゴージャス', name: 'アメジスト', bg: '#1c0d2b', wrapperBg: '#32164d', text: '#e9d5ff', sub: '#c084fc', bio: '#f3e8ff', border: '#581c87', badgeBg: '#581c87', badgeText: '#f3e8ff', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(192, 132, 252, 0.4)', shadowColor: 'rgba(192, 132, 252, 0.45)' }
   };
   const [cardThemeKey, setCardThemeKey] = useState('sakura');
 
@@ -187,7 +198,7 @@ export default function App() {
     { src: null, x: 50, y: 50, zoom: 1 }
   ]);
 
-  // ドラッグ＆ドロップ状態の管理
+  // ドラッグ＆ドロップ状態の管理（点滅予防つき）
   const [isDragOverAvatar, setIsDragOverAvatar] = useState(false);
   const [dragOverGalleryIndex, setDragOverGalleryIndex] = useState(null);
 
@@ -304,7 +315,7 @@ export default function App() {
     setActiveCrop({ type: 'gallery', index, src: compressedUrl, x: 50, y: 50, zoom: 1 });
   };
 
-  // ドラッグ＆ドロップ処理（プレビュー画面から直接）
+  // ドラッグ＆ドロップ処理（点滅予防機能付き）
   const handleDropAvatar = async (e) => {
     e.preventDefault();
     setIsDragOverAvatar(false);
@@ -313,11 +324,23 @@ export default function App() {
     }
   };
 
+  const handleDragLeaveAvatar = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragOverAvatar(false);
+    }
+  };
+
   const handleDropGallery = (index) => async (e) => {
     e.preventDefault();
     setDragOverGalleryIndex(null);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       await handleGalleryUpload(index)(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragLeaveGallery = (index) => (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverGalleryIndex(null);
     }
   };
 
@@ -390,7 +413,7 @@ export default function App() {
       const cardX = margin;
       const cardY = margin;
 
-      // 1. 角丸カードの外側にドロップシャドウを描画
+      // 角丸カードの外側にドロップシャドウを描画
       ctx.save();
       ctx.shadowColor = theme.shadowColor || 'rgba(0, 0, 0, 0.35)';
       ctx.shadowBlur = 35;
@@ -496,9 +519,9 @@ export default function App() {
         bioY += 32;
       });
 
-      // --- ギャラリー画像エリア（高さ拡大 430px -> 455px） ---
+      // --- ギャラリー画像エリア (328px : 455px) ---
       const galY = cardY + 210;
-      const galW = (cardW - 88 - 48) / 3;
+      const galW = (cardW - 88 - 48) / 3; // 328px
       const galH = 455;
 
       for (let i = 0; i < 3; i++) {
@@ -539,7 +562,7 @@ export default function App() {
         ctx.restore();
       }
 
-      // --- 下部著作権表記（スクエニ権利表記のみ） ---
+      // --- 下部著作権表記 ---
       ctx.fillStyle = theme.sub;
       ctx.font = `500 13px ${fontName}, sans-serif`;
       ctx.textAlign = 'center';
@@ -651,7 +674,7 @@ export default function App() {
             <div style={{ width: '1200px', height: '800px', transform: `scale(${scale})`, transformOrigin: 'top center' }}>
               <div ref={cardRef} style={{ width: '1200px', height: '800px', background: activeCardTheme.wrapperBg, padding: '40px', boxSizing: 'border-box', display: 'flex' }}>
                 
-                {/* 外側に影（boxShadow）を持つメインカード */}
+                {/* 外側に影を持つメインカード */}
                 <div style={{
                   flex: 1, background: activeCardTheme.bg, borderRadius: '40px', padding: '36px 44px 20px 44px',
                   fontFamily: cardFont, border: `1px solid ${activeCardTheme.border}`,
@@ -661,27 +684,27 @@ export default function App() {
                 }}>
                   <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                     
-                    {/* アイコン（ドラッグ＆ドロップ対応） */}
+                    {/* アイコン（ドラッグ＆ドロップ対応・点滅予防） */}
                     <div
                       onDragOver={(e) => { e.preventDefault(); setIsDragOverAvatar(true); }}
-                      onDragLeave={() => setIsDragOverAvatar(false)}
+                      onDragLeave={handleDragLeaveAvatar}
                       onDrop={handleDropAvatar}
                       style={{ 
                         width: '140px', height: '140px', borderRadius: '50%', 
                         border: `${isDragOverAvatar ? '8px solid #6366f1' : `6px solid ${activeCardTheme.border}`}`,
                         backgroundColor: activeCardTheme.border, 
                         overflow: 'hidden', flexShrink: 0, isolation: 'isolate', transform: 'translateZ(0)',
-                        transition: 'border 0.2s ease', cursor: 'pointer', position: 'relative'
+                        transition: 'border 0.15s ease', cursor: 'pointer', position: 'relative'
                       }}
                       title="ここに画像をドラッグ＆ドロップできます"
                     >
                       {avatar.src ? (
-                        <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})` }} />
+                        <img src={avatar.src} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${avatar.x}% ${avatar.y}%`, transform: `scale(${avatar.zoom})`, pointerEvents: 'none' }} />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px' }}>🐱</div>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px', pointerEvents: 'none' }}>🐱</div>
                       )}
                       {isDragOverAvatar && (
-                        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(99,102,241,0.7)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold' }}>ドロップ!</div>
+                        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(99,102,241,0.7)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', pointerEvents: 'none' }}>ドロップ!</div>
                       )}
                     </div>
 
@@ -695,7 +718,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* ギャラリー領域：高さ拡大 (455px) ＆ ドラッグ＆ドロップ対応 */}
+                  {/* ギャラリー領域：高さ455px ＆ ドラッグ＆ドロップ（点滅予防） */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', height: '455px', marginTop: '20px' }}>
                     {gallery.map((item, idx) => {
                       const isHover = dragOverGalleryIndex === idx;
@@ -703,30 +726,30 @@ export default function App() {
                         <div
                           key={idx}
                           onDragOver={(e) => { e.preventDefault(); setDragOverGalleryIndex(idx); }}
-                          onDragLeave={() => setDragOverGalleryIndex(null)}
+                          onDragLeave={handleDragLeaveGallery(idx)}
                           onDrop={handleDropGallery(idx)}
                           style={{ 
                             borderRadius: '28px', backgroundColor: activeCardTheme.border, 
                             border: isHover ? '4px solid #6366f1' : 'none',
                             overflow: 'hidden', position: 'relative', isolation: 'isolate', transform: 'translateZ(0)',
-                            transition: 'border 0.2s ease', cursor: 'pointer'
+                            transition: 'border 0.15s ease', cursor: 'pointer'
                           }}
                           title="ここに画像をドラッグ＆ドロップできます"
                         >
                           {item.src ? (
-                            <img src={item.src} alt={`SS ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${item.x}% ${item.y}%`, transform: `scale(${item.zoom})` }} />
+                            <img src={item.src} alt={`SS ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${item.x}% ${item.y}%`, transform: `scale(${item.zoom})`, pointerEvents: 'none' }} />
                           ) : (
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeCardTheme.sub, fontSize: '30px' }}>📷 {idx + 1}</div>
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeCardTheme.sub, fontSize: '30px', pointerEvents: 'none' }}>📷 {idx + 1}</div>
                           )}
                           {isHover && (
-                            <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(99,102,241,0.7)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>ここにドロップ!</div>
+                            <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(99,102,241,0.7)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold', pointerEvents: 'none' }}>ここにドロップ!</div>
                           )}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* 最下部著作権表記（スクエニ権利表記のみ） */}
+                  {/* 最下部著作権表記 */}
                   <div style={{ marginTop: 'auto', textAlign: 'center', paddingBottom: '2px' }}>
                     <div style={{ fontSize: '13px', fontWeight: '500', color: activeCardTheme.sub, opacity: 0.9 }}>
                       (C) SQUARE ENIX CO., LTD. All Rights Reserved.
@@ -818,7 +841,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={labelStyle(colors)}>カラーテーマ (全24種類)</label>
+                  <label style={labelStyle(colors)}>カラーテーマ (全32種類)</label>
                   {/* カテゴリ切り替えタブ */}
                   <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '8px' }}>
                     {themeCategories.map((cat) => (
