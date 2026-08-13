@@ -127,7 +127,8 @@ export default function App() {
   const [dc, setDc] = useState('Mana');
   const [race, setRace] = useState("Miqo'te");
   const [twitterId, setTwitterId] = useState('hika_sen');
-  const [bio, setBio] = useState('FF14メインアカウント。\nこだわりのスクリーンショットをアルバムのように投稿しています📷✨');
+  // ひとことの初期設定を変更
+  const [bio, setBio] = useState('クリスタルの導きがあらんことを');
 
   const dcOptions = ['Mana', 'Elemental', 'Gaia', 'Meteor', 'Aether', 'Primal', 'Crystal', 'Dynamis', 'Light', 'Chaos', 'Materia'];
   const raceOptions = ["Miqo'te", 'Hyur', 'Elezen', 'Lalafell', 'Roegadyn', 'Au Ra', 'Hrothgar', 'Viera'];
@@ -144,7 +145,7 @@ export default function App() {
   ];
   const [cardFont, setCardFont] = useState(fontOptions[0].value);
 
-  // 全32種類のテーマ（各カテゴリ8種類ずつ）
+  // 全34種類のテーマ（透け感のあるテーマ2種を追加）
   const themeCategories = ['すべて', 'シンプル', 'かわいい', 'かっこいい', 'ゴージャス'];
   const [selectedCategory, setSelectedCategory] = useState('すべて');
 
@@ -179,7 +180,7 @@ export default function App() {
     crimson: { category: 'かっこいい', name: 'クリムゾン', bg: '#1f0910', wrapperBg: '#380f1d', text: '#fb7185', sub: '#f43f5e', bio: '#ffe4e6', border: '#881337', badgeBg: '#881337', badgeText: '#fb7185', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(251, 113, 133, 0.35)', shadowColor: 'rgba(251, 113, 133, 0.45)' },
     midnightBlue: { category: 'かっこいい', name: '深海', bg: '#0a1128', wrapperBg: '#001f54', text: '#64dfdf', sub: '#48cae4', bio: '#caf0f8', border: '#03045e', badgeBg: '#03045e', badgeText: '#64dfdf', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(100, 223, 223, 0.35)', shadowColor: 'rgba(100, 223, 223, 0.45)' },
 
-    // --- ゴージャス (8種) ---
+    // --- ゴージャス (10種) ---
     midnight: { category: 'ゴージャス', name: '黒金', bg: '#09090b', wrapperBg: '#18181b', text: '#facc15', sub: '#a1a1aa', bio: '#e4e4e7', border: '#27272a', badgeBg: '#27272a', badgeText: '#facc15', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(250, 204, 21, 0.3)', shadowColor: 'rgba(250, 204, 21, 0.4)' },
     royal: { category: 'ゴージャス', name: 'ロイヤル', bg: '#0f0728', wrapperBg: '#1e1b4b', text: '#eab308', sub: '#a855f7', bio: '#fef08a', border: '#2e1065', badgeBg: '#2e1065', badgeText: '#fde047', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(234, 179, 8, 0.35)', shadowColor: 'rgba(234, 179, 8, 0.45)' },
     glass: { category: 'ゴージャス', name: 'クリスタル', bg: 'rgba(255, 255, 255, 0.45)', wrapperBg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', text: '#0f172a', sub: '#475569', bio: '#1e293b', border: 'rgba(255, 255, 255, 0.6)', badgeBg: 'rgba(255, 255, 255, 0.6)', badgeText: '#0369a1', shadow: '0 20px 50px rgba(31, 38, 135, 0.2)', backdropFilter: 'blur(16px)', shadowColor: 'rgba(31, 38, 135, 0.3)' },
@@ -187,7 +188,11 @@ export default function App() {
     champagne: { category: 'ゴージャス', name: 'シャンパン', bg: '#2b2319', wrapperBg: '#3d3224', text: '#f3d08a', sub: '#c5a059', bio: '#fcefc7', border: '#594935', badgeBg: '#594935', badgeText: '#f3d08a', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(243, 208, 138, 0.3)', shadowColor: 'rgba(243, 208, 138, 0.4)' },
     deepRose: { category: 'ゴージャス', name: 'ディープローズ', bg: '#230914', wrapperBg: '#3b1022', text: '#f472b6', sub: '#be185d', bio: '#fbcfe8', border: '#58122c', badgeBg: '#58122c', badgeText: '#f472b6', shadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(244, 114, 182, 0.3)', shadowColor: 'rgba(244, 114, 182, 0.4)' },
     goldLuxury: { category: 'ゴージャス', name: '純金', bg: '#110f0a', wrapperBg: '#241f13', text: '#ffd700', sub: '#e6c200', bio: '#fff3a8', border: '#4a3f21', badgeBg: '#4a3f21', badgeText: '#ffd700', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)', shadowColor: 'rgba(255, 215, 0, 0.45)' },
-    amethyst: { category: 'ゴージャス', name: 'アメジスト', bg: '#1c0d2b', wrapperBg: '#32164d', text: '#e9d5ff', sub: '#c084fc', bio: '#f3e8ff', border: '#581c87', badgeBg: '#581c87', badgeText: '#f3e8ff', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(192, 132, 252, 0.4)', shadowColor: 'rgba(192, 132, 252, 0.45)' }
+    amethyst: { category: 'ゴージャス', name: 'アメジスト', bg: '#1c0d2b', wrapperBg: '#32164d', text: '#e9d5ff', sub: '#c084fc', bio: '#f3e8ff', border: '#581c87', badgeBg: '#581c87', badgeText: '#f3e8ff', shadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(192, 132, 252, 0.4)', shadowColor: 'rgba(192, 132, 252, 0.45)' },
+    // 追加された透け感テーマ（①）
+    crystalVeil: { category: 'ゴージャス', name: 'クリスタルヴェール', bg: 'rgba(255, 255, 255, 0.35)', wrapperBg: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', text: '#1e1b4b', sub: '#4338ca', bio: '#312e81', border: 'rgba(255, 255, 255, 0.5)', badgeBg: 'rgba(255, 255, 255, 0.5)', badgeText: '#4338ca', shadow: '0 20px 50px rgba(99, 102, 241, 0.25)', backdropFilter: 'blur(16px)', shadowColor: 'rgba(99, 102, 241, 0.3)' },
+    // 追加された透け感テーマ（②）
+    midnightGlass: { category: 'ゴージャス', name: 'ミッドナイトグラス', bg: 'rgba(15, 23, 42, 0.65)', wrapperBg: 'linear-gradient(135deg, #0f172a 0%, #172554 100%)', text: '#38bdf8', sub: '#7dd3fc', bio: '#e0f2fe', border: 'rgba(56, 189, 248, 0.3)', badgeBg: 'rgba(56, 189, 248, 0.2)', badgeText: '#38bdf8', shadow: '0 25px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.2)', backdropFilter: 'blur(16px)', shadowColor: 'rgba(56, 189, 248, 0.3)' }
   };
   const [cardThemeKey, setCardThemeKey] = useState('sakura');
 
@@ -223,12 +228,15 @@ export default function App() {
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
+      // スマホ閲覧時の右側UI幅崩れ防止のレスポンシブスタイルの修正
       style.innerHTML = `
         .app-container { 
           display: grid; 
           grid-template-columns: minmax(0, 1fr) 380px; 
           gap: 24px; 
           align-items: start;
+          width: 100%;
+          box-sizing: border-box;
         }
         .panel-area {
           position: sticky;
@@ -236,20 +244,29 @@ export default function App() {
           max-height: calc(100vh - 90px);
           display: flex;
           flex-direction: column;
+          width: 100%;
+          box-sizing: border-box;
         }
         @media (max-width: 1024px) { 
           .app-container { 
             display: flex; 
             flex-direction: column; 
+            width: 100%;
           } 
           .preview-area {
             position: sticky;
             top: 54px;
             z-index: 80;
             padding-bottom: 12px;
+            width: 100%;
+            box-sizing: border-box;
           }
           .panel-area {
             position: static;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
             max-height: 500px !important;
           }
         }
@@ -397,6 +414,12 @@ export default function App() {
         if (cardThemeKey === 'glassDark') {
           grad.addColorStop(0, '#0f172a');
           grad.addColorStop(1, '#2e1065');
+        } else if (cardThemeKey === 'midnightGlass') {
+          grad.addColorStop(0, '#0f172a');
+          grad.addColorStop(1, '#172554');
+        } else if (cardThemeKey === 'crystalVeil') {
+          grad.addColorStop(0, '#e0c3fc');
+          grad.addColorStop(1, '#8ec5fc');
         } else {
           grad.addColorStop(0, '#a1c4fd');
           grad.addColorStop(1, '#c2e9fb');
@@ -762,8 +785,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* コントロールパネル */}
-        <div className="panel-area" style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden' }}>
+        {/* コントロールパネル（スマホ幅崩れ防止を適用） */}
+        <div className="panel-area" style={{ backgroundColor: colors.panelBg, border: `1px solid ${colors.border}`, borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box', minWidth: 0 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.inputBg, flexShrink: 0 }}>
             <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} colors={colors}>👤 プロフ</TabButton>
             <TabButton active={activeTab === 'images'} onClick={() => setActiveTab('images')} colors={colors}>🖼️ 画像</TabButton>
@@ -841,7 +864,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={labelStyle(colors)}>カラーテーマ (全32種類)</label>
+                  <label style={labelStyle(colors)}>カラーテーマ (全34種類)</label>
                   {/* カテゴリ切り替えタブ */}
                   <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '8px' }}>
                     {themeCategories.map((cat) => (
